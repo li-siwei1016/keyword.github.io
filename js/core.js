@@ -157,6 +157,7 @@ function loadMoreHistory() {
                 musicPlayerEnabled: false,
                 replyDelayMin: 3000,
                 replyDelayMax: 7000,
+                momentPostChance: 0.3,
                 inChatAvatarEnabled: true,
                 inChatAvatarSize: 36,
                 inChatAvatarPosition: 'center',
@@ -962,6 +963,25 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         const detail = msg.callDetail ? `<span class="call-event-detail">${msg.callDetail}</span>` : '';
         callEvDiv.innerHTML = `<div class="call-event-pill ${colorClass}"><i class="fas ${icon} call-event-icon"></i><span class="call-event-label">${msg.text.replace(/ · .*/, '')}</span>${detail}<button class="call-event-delete" title="删除" onclick="(function(btn){const id=btn.closest('[data-id]').dataset.id;const idx=messages.findIndex(m=>String(m.id)===String(id));if(idx>-1){messages.splice(idx,1);renderMessages();throttledSaveData();}})(this)"><i class="fas fa-times"></i></button></div>`;
         fragment.appendChild(callEvDiv);
+        lastSenderRef.current = 'system';
+        return fragment;
+    }
+
+    if (msg.type === 'decision') {
+        const decWrap = document.createElement('div');
+        decWrap.className = 'decision-card-message';
+        decWrap.dataset.id = msg.id;
+        decWrap.dataset.msgId = msg.id;
+        const decOpts = (msg.decisionOptions || []).map(o => {
+            const isChosen = msg.decisionChosen && String(msg.decisionChosen) === String(o);
+            return `<span class="decision-card-opt${isChosen ? ' chosen' : ''}">${isChosen ? '✓ ' : ''}${o}</span>`;
+        }).join('');
+        decWrap.innerHTML = `<div class="decision-card">
+            <div class="decision-card-q"><i class="fas fa-circle-question"></i>${msg.text || ''}</div>
+            <div class="decision-card-opts">${decOpts}</div>
+            <div class="decision-card-foot${msg.decisionChosen ? ' done' : ''}">${msg.decisionChosen ? 'Ta 选了「' + msg.decisionChosen + '」' : '等待 Ta 选择…'}</div>
+        </div>`;
+        fragment.appendChild(decWrap);
         lastSenderRef.current = 'system';
         return fragment;
     }

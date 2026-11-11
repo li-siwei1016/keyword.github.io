@@ -1166,6 +1166,16 @@
                         </div>
                     </div>
 
+                    <p class="cs-group-label" style="margin-top:4px;">动态</p>
+                    <div class="cs-card">
+                        <div class="cs-slider-row">
+                            <span class="cs-slider-label">Ta 发布概率</span>
+                            <input type="range" min="5" max="100" step="5" value="30" class="font-size-slider" id="moment-chance-slider">
+                            <span class="cs-slider-val" id="moment-chance-value">30%</span>
+                        </div>
+                        <p class="cs-hint" style="margin-top:6px;">概率越高，Ta 越常在「动态」里发布内容</p>
+                    </div>
+
                     <p class="cs-group-label" style="margin-top:4px;">通话功能</p>
                     <div class="cs-card">
                         <div class="setting-pill-row" id="call-feature-toggle-row">
@@ -1376,9 +1386,13 @@
                     <div class="settings-item" id="stats-function">
                         <i class="fas fa-chart-bar"></i><span>消息统计</span>
                     </div>
+                    <div class="settings-item" id="moments-function" style="position:relative;">
+                        <i class="fas fa-stream"></i><span>动态</span>
+                        <span class="moments-unread-dot" id="moments-unread-dot" style="display:none;"></span>
+                    </div>
                     <div class="settings-item" id="decision-function">
-                        <i class="fas fa-balance-scale"></i> 
-                        <span>抉择</span> 
+                        <i class="fas fa-comments"></i> 
+                        <span>询问 · 抉择</span> 
                     </div>
                     <div class="settings-item" id="fortune-lenormand-function" style="position:relative;">
                         <i class="fas fa-star-and-crescent"></i><span>运势 · 占卜</span>
@@ -2032,11 +2046,37 @@
     </div>
 
     <div class="modal" id="decision-menu-modal">
-        <div class="modal-content">
+        <div class="modal-content ad-modal-content">
             <div class="modal-title">
-                <i class="fas fa-balance-scale"></i><span>抉择助手</span>
+                <i class="fas fa-comments"></i><span>询问 · 抉择</span>
             </div>
-            <div class="decision-menu-grid">
+            <p class="ad-subtitle">写下问题，给出几个答案，Ta 会在聊天里替你选一个</p>
+
+            <div class="ad-field">
+                <label class="ad-label"><i class="fas fa-question"></i>我要问的问题</label>
+                <textarea id="ad-question-input" class="ad-textarea" rows="2" placeholder="例如：今天我们去哪里约会？"></textarea>
+            </div>
+
+            <div class="ad-field">
+                <label class="ad-label"><i class="fas fa-list-ul"></i>答案选项<span class="ad-count" id="ad-option-count">2 项</span></label>
+                <div class="ad-options" id="ad-options-list"></div>
+                <button class="ad-add-btn" id="ad-add-option"><i class="fas fa-plus"></i>添加答案</button>
+            </div>
+
+            <button class="modal-btn modal-btn-primary ad-send-btn" id="ad-send-btn">
+                <i class="fas fa-paper-plane"></i>发给 Ta 选
+            </button>
+
+            <div class="ad-history">
+                <div class="ad-history-head">
+                    <span><i class="fas fa-clock-rotate-left"></i>使用记录 <em id="ad-history-count">0</em></span>
+                    <button class="ad-history-clear" id="ad-clear-history">清空</button>
+                </div>
+                <div class="ad-history-list" id="ad-history-list"></div>
+            </div>
+
+            <div class="ad-tools-title">小工具</div>
+            <div class="decision-menu-grid ad-tools-grid">
                 <div class="decision-option-card" id="open-coin-toss">
                     <i class="fas fa-coins"></i>
                     <h3>抛硬币</h3>
@@ -2048,12 +2088,44 @@
                     <p>自定义选项随机抽取</p>
                 </div>
             </div>
+
             <div class="modal-buttons">
                 <button class="modal-btn modal-btn-secondary" id="close-decision-menu">关闭</button>
             </div>
         </div>
     </div>
-    
+
+    <div class="modal" id="moments-modal">
+        <div class="modal-content moments-modal-content">
+            <div class="moments-head">
+                <div class="modal-title">
+                    <i class="fas fa-stream"></i><span>动态</span>
+                </div>
+                <button class="moments-compose-toggle" id="moments-compose-toggle">
+                    <i class="fas fa-plus"></i> 发布
+                </button>
+            </div>
+
+            <div class="moments-composer" id="moments-composer">
+                <textarea id="moment-text-input" class="moments-textarea" rows="3" placeholder="分享此刻的心情…"></textarea>
+                <div class="moments-composer-bar">
+                    <button class="moments-image-btn" id="moment-pick-image" title="添加图片">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <input type="file" id="moment-image-input" accept="image/*" style="display:none;">
+                    <div class="moments-image-preview" id="moment-image-preview"></div>
+                    <button class="modal-btn modal-btn-primary moments-publish-btn" id="moment-publish">发布</button>
+                </div>
+            </div>
+
+            <div class="moments-feed" id="moments-feed"></div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="close-moments">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal" id="wheel-modal">
         <div class="modal-content">
             <div class="modal-title">
@@ -2224,6 +2296,8 @@
     <script src="js/features/theme-editor.js"></script>
     <script src="js/features/group-chat.js"></script>
     <script src="js/features/call.js"></script>
+    <script src="js/features/moments.js"></script>
+    <script src="js/features/decision-ask.js"></script>
 
     <!-- == 合并模块 == -->
     <script src="js/games.js"></script> 

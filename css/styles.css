@@ -10876,3 +10876,473 @@
             border-color: var(--accent-color) !important;
             outline: none;
         }
+
+        /* ==================== 询问 · 抉择 ==================== */
+        #decision-menu-modal .ad-modal-content {
+            max-height: 88vh;
+            padding-bottom: 4px;
+        }
+        .ad-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: -6px 0 14px;
+            opacity: 0.85;
+        }
+        .ad-field { margin-bottom: 14px; }
+        .ad-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 7px;
+            letter-spacing: 0.3px;
+        }
+        .ad-label i { color: var(--accent-color); font-size: 11px; }
+        .ad-count {
+            margin-left: auto;
+            font-weight: 500;
+            font-size: 11px;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+        .ad-textarea {
+            width: 100%;
+            resize: none;
+            padding: 11px 13px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 13.5px;
+            line-height: 1.55;
+            transition: var(--transition);
+        }
+        .ad-textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: var(--secondary-bg);
+        }
+        .ad-options { display: flex; flex-direction: column; gap: 8px; }
+        .ad-option-row { display: flex; align-items: center; gap: 8px; }
+        .ad-option-index {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(var(--accent-color-rgb), 0.12);
+            color: var(--accent-color);
+            font-size: 11px;
+            font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .ad-option-input {
+            flex: 1;
+            min-width: 0;
+            padding: 9px 12px;
+            border-radius: 11px;
+            border: 1px solid var(--border-color);
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 13px;
+            transition: var(--transition);
+        }
+        .ad-option-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: var(--secondary-bg);
+        }
+        .ad-option-remove {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+        .ad-option-remove:hover { opacity: 1; color: #e05a5a; background: rgba(224, 90, 90, 0.1); }
+        .ad-add-btn {
+            margin-top: 9px;
+            width: 100%;
+            padding: 9px 0;
+            border-radius: 11px;
+            border: 1px dashed var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-family);
+            font-size: 12.5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .ad-add-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
+        .ad-add-btn i { margin-right: 5px; font-size: 11px; }
+        .ad-send-btn { width: 100%; margin: 2px 0 16px; display: flex; align-items: center; justify-content: center; gap: 7px; }
+        .ad-history {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+        .ad-history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        .ad-history-head i { color: var(--accent-color); font-size: 11px; margin-right: 5px; }
+        .ad-history-head em {
+            font-style: normal;
+            font-size: 11px;
+            color: var(--accent-color);
+            background: rgba(var(--accent-color-rgb), 0.12);
+            border-radius: 8px;
+            padding: 1px 6px;
+            margin-left: 5px;
+        }
+        .ad-history-clear {
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-family);
+            font-size: 11.5px;
+            cursor: pointer;
+            opacity: 0.75;
+            padding: 2px 4px;
+        }
+        .ad-history-clear:hover { color: #e05a5a; opacity: 1; }
+        .ad-history-list { display: flex; flex-direction: column; gap: 8px; max-height: 152px; overflow-y: auto; }
+        .ad-history-item {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 9px 11px;
+        }
+        .ad-history-q {
+            font-size: 12.5px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .ad-history-q::before { content: "Q "; color: var(--accent-color); font-weight: 700; font-size: 11px; }
+        .ad-history-a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+            font-size: 12px;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        .ad-history-a::before { content: "A"; font-size: 10px; opacity: 0.7; }
+        .ad-history-time { margin-left: auto; font-size: 10.5px; color: var(--text-secondary); font-weight: 400; opacity: 0.75; }
+        .ad-empty {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            opacity: 0.6;
+            padding: 14px 0 6px;
+        }
+        .ad-tools-title {
+            margin-top: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            opacity: 0.8;
+            letter-spacing: 0.3px;
+        }
+        .ad-tools-grid { padding: 10px 0 4px; gap: 12px; }
+        .ad-tools-grid .decision-option-card { padding: 14px 10px; }
+        .ad-tools-grid .decision-option-card i { font-size: 22px; margin-bottom: 6px; }
+        .ad-tools-grid .decision-option-card h3 { font-size: 13px; margin-bottom: 2px; }
+        .ad-tools-grid .decision-option-card p { font-size: 11px; }
+
+        /* —— 聊天里的抉择问题卡片 —— */
+        .decision-card-message {
+            display: flex;
+            justify-content: center;
+            padding: 10px 12px 2px;
+        }
+        .decision-card {
+            width: 100%;
+            max-width: 320px;
+            background: var(--primary-bg);
+            border: 1px solid rgba(var(--accent-color-rgb), 0.35);
+            border-radius: 16px;
+            padding: 13px 14px 11px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+        .decision-card-q {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.55;
+            margin-bottom: 9px;
+            word-break: break-word;
+        }
+        .decision-card-q i { color: var(--accent-color); margin-right: 5px; font-size: 12px; }
+        .decision-card-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+        .decision-card-opt {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        .decision-card-opt.chosen {
+            background: rgba(var(--accent-color-rgb), 0.14);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        .decision-card-foot {
+            margin-top: 9px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            opacity: 0.85;
+        }
+        .decision-card-foot.done { color: var(--accent-color); opacity: 1; }
+
+        /* ==================== 动态 ==================== */
+        .moments-unread-dot {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e05a5a;
+            box-shadow: 0 0 0 3px rgba(224, 90, 90, 0.18);
+        }
+        #moments-modal .moments-modal-content {
+            max-height: 88vh;
+            padding-bottom: 0;
+        }
+        .moments-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .moments-head .modal-title { margin-bottom: 0; }
+        .moments-compose-toggle {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 7px 13px;
+            border-radius: 20px;
+            border: 1px solid rgba(var(--accent-color-rgb), 0.4);
+            background: rgba(var(--accent-color-rgb), 0.1);
+            color: var(--accent-color);
+            font-family: var(--font-family);
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+        .moments-compose-toggle:hover { background: rgba(var(--accent-color-rgb), 0.18); }
+        .moments-compose-toggle.open i { transform: rotate(45deg); }
+        .moments-compose-toggle i { font-size: 11px; transition: transform 0.3s ease; }
+        .moments-composer {
+            display: none;
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 11px;
+            margin-bottom: 12px;
+        }
+        .moments-composer.open { display: block; }
+        .moments-textarea {
+            width: 100%;
+            resize: none;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 13.5px;
+            line-height: 1.6;
+            padding: 2px 2px 6px;
+        }
+        .moments-textarea:focus { outline: none; }
+        .moments-composer-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 9px;
+        }
+        .moments-image-btn {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+        .moments-image-btn:hover { color: var(--accent-color); border-color: var(--accent-color); }
+        .moments-image-preview { flex: 1; min-width: 0; display: flex; gap: 6px; align-items: center; }
+        .moments-image-preview img {
+            height: 34px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+        .moments-image-preview .mp-clear {
+            border: none; background: transparent; color: var(--text-secondary);
+            font-size: 13px; cursor: pointer; padding: 2px 4px;
+        }
+        .moments-publish-btn {
+            padding: 7px 18px;
+            font-size: 13px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+        .moments-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 46vh;
+            overflow-y: auto;
+            padding: 2px 2px 8px;
+        }
+        .moment-card {
+            background: var(--primary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 12px 13px;
+        }
+        .moment-head {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 8px;
+        }
+        .moment-avatar {
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: rgba(var(--accent-color-rgb), 0.12);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent-color);
+            font-size: 13px;
+        }
+        .moment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .moment-meta { flex: 1; min-width: 0; }
+        .moment-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .moment-time { font-size: 10.5px; color: var(--text-secondary); opacity: 0.75; margin-top: 1px; }
+        .moment-del {
+            border: none; background: transparent; color: var(--text-secondary);
+            cursor: pointer; opacity: 0.5; font-size: 12px; padding: 4px;
+        }
+        .moment-del:hover { opacity: 1; color: #e05a5a; }
+        .moment-text {
+            font-size: 13.5px;
+            color: var(--text-primary);
+            line-height: 1.65;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+        .moment-img {
+            margin-top: 9px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 132px;
+        }
+        .moment-img img {
+            width: 100%;
+            display: block;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .moment-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .moment-act {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 11px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            color: var(--text-secondary);
+            font-family: var(--font-family);
+            font-size: 11.5px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .moment-act i { font-size: 11px; }
+        .moment-act:hover { border-color: rgba(var(--accent-color-rgb), 0.5); }
+        .moment-act.liked {
+            color: #e05a5a;
+            border-color: rgba(224, 90, 90, 0.4);
+            background: rgba(224, 90, 90, 0.08);
+        }
+        .moment-act.liked i { color: #e05a5a; }
+        .moment-comments {
+            margin-top: 9px;
+            border-top: 1px dashed var(--border-color);
+            padding-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .moment-comment {
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+        .moment-comment .mc-name { color: var(--accent-color); font-weight: 600; margin-right: 4px; }
+        .moment-comment .mc-img { max-width: 78px; border-radius: 8px; display: block; margin-top: 4px; cursor: pointer; }
+        .moment-comment-input {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .moment-comment-input input {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 12px;
+        }
+        .moment-comment-input input:focus { outline: none; border-color: var(--accent-color); }
+        .moment-comment-input button {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent-color);
+            color: var(--message-sent-text);
+            cursor: pointer;
+            flex-shrink: 0;
+            font-size: 11px;
+        }
+        .moments-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 12.5px;
+            padding: 34px 10px;
+            opacity: 0.7;
+            line-height: 1.8;
+        }
+        .moments-empty i { display: block; font-size: 26px; opacity: 0.3; margin-bottom: 10px; }

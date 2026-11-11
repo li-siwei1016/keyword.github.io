@@ -10,6 +10,8 @@ function setupEventListeners() {
         setupTutorialListeners();
         initMoodListeners();
         initDecisionModule(); 
+        if (typeof initDecisionAskModule === 'function') initDecisionAskModule();
+        if (typeof initMomentsModule === 'function') initMomentsModule();
         initAnniversaryModule(); 
         initThemeEditor(); 
         initThemeSchemes();
@@ -1140,6 +1142,22 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 updateDelayUI();
             });
             maxDelaySlider.addEventListener('change', throttledSaveData);
+
+            // 动态：对方发布概率
+            const momentChanceSlider = document.getElementById('moment-chance-slider');
+            const momentChanceValue = document.getElementById('moment-chance-value');
+            if (momentChanceSlider) {
+                const initPct = Math.round((Number(settings.momentPostChance) || 0.3) * 100);
+                momentChanceSlider.value = Math.min(100, Math.max(5, initPct));
+                if (momentChanceValue) momentChanceValue.textContent = momentChanceSlider.value + '%';
+                momentChanceSlider.addEventListener('input', (e) => {
+                    if (momentChanceValue) momentChanceValue.textContent = e.target.value + '%';
+                });
+                momentChanceSlider.addEventListener('change', (e) => {
+                    settings.momentPostChance = parseInt(e.target.value, 10) / 100;
+                    throttledSaveData();
+                });
+            }
 
             const settingToggles = {
                 '#reply-toggle': {
