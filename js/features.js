@@ -805,7 +805,7 @@ function showPokeTab() {
             });
 
             DOMElements.continueBtn.addEventListener('click', simulateReply);
-            DOMElements.batchBtn.addEventListener('click', toggleBatchMode);
+            if (DOMElements.batchBtn) DOMElements.batchBtn.addEventListener('click', toggleBatchMode);
         }
 
 window._dailyGreetingReady = false;

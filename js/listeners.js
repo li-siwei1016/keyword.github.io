@@ -3,6 +3,7 @@ function setupEventListeners() {
         initCoreListeners();
         initModalListeners();
         initChatActionListeners();
+        initMessageLongPress();
         initHeaderAndSettingsListeners();
         initDataManagementListeners();
         initNewFeatureListeners();
@@ -18,6 +19,99 @@ function setupEventListeners() {
     } catch (e) {
         console.error("事件绑定过程中发生错误:", e);
     }
+}
+
+/* 长按消息（450ms）显示「回复 / 收藏 / 删除」操作条，点击空白处或滚动时收起 */
+function initMessageLongPress() {
+    const container = DOMElements.chatContainer;
+    if (!container || container.dataset.longPressBound === '1') return;
+    container.dataset.longPressBound = '1';
+
+    const HOLD_MS = 450;
+    const MOVE_TOLERANCE = 10;
+
+    let timer = null;
+    let startX = 0;
+    let startY = 0;
+    let moved = false;
+    let pressedEl = null;
+    let suppressClickUntil = 0;
+
+    const closeAll = () => {
+        container.querySelectorAll('.message-content-wrapper.show-actions')
+            .forEach(el => el.classList.remove('show-actions'));
+    };
+
+    const cancelPress = () => {
+        if (timer) clearTimeout(timer);
+        timer = null;
+        pressedEl = null;
+    };
+
+    const startPress = (x, y, el) => {
+        cancelPress();
+        pressedEl = el;
+        moved = false;
+        startX = x;
+        startY = y;
+        timer = setTimeout(() => {
+            timer = null;
+            if (moved || !pressedEl) return;
+            closeAll();
+            pressedEl.classList.add('show-actions');
+            // 长按之后浏览器仍会补发一次 click，这里屏蔽掉，避免立即被"点击空白收起"逻辑关掉
+            suppressClickUntil = Date.now() + 800;
+            if (navigator.vibrate) { try { navigator.vibrate(15); } catch (err) {} }
+        }, HOLD_MS);
+    };
+
+    const checkMove = (x, y, tolerance) => {
+        if (!timer) return;
+        if (Math.abs(x - startX) > tolerance || Math.abs(y - startY) > tolerance) {
+            moved = true;
+            cancelPress();
+        }
+    };
+
+    container.addEventListener('touchstart', (e) => {
+        if (isBatchFavoriteMode) return;
+        if (e.touches.length !== 1) { cancelPress(); return; }
+        const wrap = e.target.closest('.message-content-wrapper');
+        if (!wrap) { cancelPress(); return; }
+        startPress(e.touches[0].clientX, e.touches[0].clientY, wrap);
+    }, { passive: true });
+
+    container.addEventListener('touchmove', (e) => {
+        if (e.touches.length !== 1) return;
+        checkMove(e.touches[0].clientX, e.touches[0].clientY, MOVE_TOLERANCE);
+    }, { passive: true });
+
+    container.addEventListener('touchend', cancelPress, { passive: true });
+    container.addEventListener('touchcancel', cancelPress, { passive: true });
+
+    // 桌面端：鼠标按住不放同样可以唤出
+    const hasTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (!hasTouch) {
+        container.addEventListener('mousedown', (e) => {
+            if (isBatchFavoriteMode || e.button !== 0) return;
+            const wrap = e.target.closest('.message-content-wrapper');
+            if (!wrap) return;
+            startPress(e.clientX, e.clientY, wrap);
+        });
+        container.addEventListener('mousemove', (e) => checkMove(e.clientX, e.clientY, 6));
+        container.addEventListener('mouseup', cancelPress);
+        container.addEventListener('mouseleave', cancelPress);
+    }
+
+    // 点击其它地方收起（点操作条内部、或点已展开的那条消息本身时不收起）
+    document.addEventListener('click', (e) => {
+        if (Date.now() < suppressClickUntil) return;
+        if (e.target.closest('.message-meta-actions')) return;
+        if (e.target.closest('.message-content-wrapper.show-actions')) return;
+        closeAll();
+    }, true);
+
+    container.addEventListener('scroll', closeAll, { passive: true });
 }
 
 function initChatActionListeners() {
@@ -130,7 +224,7 @@ if (target.classList.contains('delete-btn')) {
                 const sendBtn = e.target.closest('.batch-send-btn');
                 if (sendBtn && !sendBtn.disabled) sendBatchMessages();
                 if (e.target.matches('.batch-cancel-btn')) {
-                    isBatchMode = false; DOMElements.batchBtn.classList.remove('active');
+                    isBatchMode = false; if (DOMElements.batchBtn) DOMElements.batchBtn.classList.remove('active');
                     DOMElements.batchPreview.style.display = 'none';
                     const placeholder = "";
                     DOMElements.messageInput.placeholder = placeholder.length > 20 ? placeholder.substring(0, 20) + "...": placeholder;
@@ -3128,7 +3222,7 @@ playlist.style.top = (rect.top + (player.classList.contains('collapsed') ? 65 : 
             });
 
             DOMElements.continueBtn.addEventListener('click', simulateReply);
-            DOMElements.batchBtn.addEventListener('click', toggleBatchMode);
+            if (DOMElements.batchBtn) DOMElements.batchBtn.addEventListener('click', toggleBatchMode);
         }
 
 
@@ -3171,7 +3265,6 @@ window.toggleCollapsedExtras = function() {
         }
     }
     wireExtra('combo-btn-extra', 'combo-btn');
-    wireExtra('batch-btn-extra', 'batch-btn');
 };
 
 window.exitCollapseMode = function() {

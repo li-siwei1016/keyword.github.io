@@ -1075,7 +1075,12 @@
             transition: var(--transition);
             z-index: 2;
         }
-        .message-content-wrapper:hover .message-meta-actions {
+        .message-content-wrapper {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        .message-content-wrapper.show-actions .message-meta-actions {
             opacity: 1;
             transform: translateY(0);
         }

@@ -1483,8 +1483,10 @@ if (!isBatchMode && type === 'normal') {
 
         function toggleBatchMode() {
             isBatchMode = !isBatchMode;
-            DOMElements.batchBtn.classList.toggle('active', isBatchMode);
-            DOMElements.batchBtn.title = isBatchMode ? "退出批量模式": "批量发送模式";
+            if (DOMElements.batchBtn) {
+                DOMElements.batchBtn.classList.toggle('active', isBatchMode);
+                DOMElements.batchBtn.title = isBatchMode ? "退出批量模式": "批量发送模式";
+            }
             DOMElements.batchPreview.style.display = isBatchMode ? 'flex': 'none';
             const placeholder = "";
             DOMElements.messageInput.placeholder = isBatchMode ? "此刻，想说的有很多很多...": (placeholder.length > 20 ? placeholder.substring(0, 20) + "...": placeholder);
@@ -1559,7 +1561,8 @@ if (!isBatchMode && type === 'normal') {
             const randomDelay = settings.replyDelayMin + Math.random() * delayRange;
             setTimeout(simulateReply, batchMessages.length * 300 + randomDelay);
             isBatchMode = false; batchMessages = [];
-            DOMElements.batchBtn.classList.remove('active'); DOMElements.batchPreview.style.display = 'none';
+            if (DOMElements.batchBtn) DOMElements.batchBtn.classList.remove('active');
+            DOMElements.batchPreview.style.display = 'none';
             const placeholder = "";
             DOMElements.messageInput.placeholder = placeholder.length > 20 ? placeholder.substring(0, 20) + "...": placeholder;
         }

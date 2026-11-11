@@ -382,12 +382,6 @@ const tourSteps = [
         position: 'top'
     },
     {
-        element: '#batch-btn',
-        title: "📦 批量发送模式",
-        content: "开启<b>批量模式</b>后，你可以先写好多条消息，再一次性全部发出去<br><br>点击按钮开启，编辑完成后再次点击「发送全部」即可。",
-        position: 'top'
-    },
-    {
         element: '#settings-btn',
         title: "⚙️ 设置中心",
         content: "所有个性化配置都在这个<b>设置按钮</b>里，我们点进去看一下！<br>",
