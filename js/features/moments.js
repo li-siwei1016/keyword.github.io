@@ -136,12 +136,15 @@ function renderMomentsFeed() {
     const feed = document.getElementById('moments-feed');
     if (!feed) return;
 
-    if (!momentsData.length) {
+    // 按时间倒序（最新在前），保证发表记录按时间顺序依次展示
+    const sorted = [...momentsData].sort((a, b) => (Number(b.time) || 0) - (Number(a.time) || 0));
+
+    if (!sorted.length) {
         feed.innerHTML = `<div class="moments-empty"><i class="fas fa-seedling"></i>还没有动态<br>发布第一条，让 Ta 来点赞吧</div>`;
         return;
     }
 
-    feed.innerHTML = momentsData.map(post => {
+    feed.innerHTML = sorted.map(post => {
         const likedByMe = post.likes.some(l => l.by === 'user');
         const likedByPartner = post.likes.some(l => l.by === 'partner');
         const likeCount = post.likes.length;
@@ -164,7 +167,6 @@ function renderMomentsFeed() {
                     <div class="moment-name">${mEsc(momentName(post.author))}</div>
                     <div class="moment-time">${momentTimeLabel(post.time)}</div>
                 </div>
-                <button class="moment-del" data-act="delete" title="删除这条动态"><i class="fas fa-trash-can"></i></button>
             </div>
             ${post.text ? `<div class="moment-text">${mEsc(post.text)}</div>` : ''}
             ${post.image ? `<div class="moment-img"><img src="${mEsc(post.image)}" alt="动态图片" data-act="view-image" data-src="${mEsc(post.image)}"></div>` : ''}
@@ -386,6 +388,120 @@ function maybePartnerPost() {
 }
 
 /* ---------------- 面板 ---------------- */
+/* 封面：双方头像 + 头像框 + 相遇纪念日 */
+function renderMomentsHeader() {
+    const wrapP = document.getElementById('moments-av-partner');
+    const wrapU = document.getElementById('moments-av-user');
+    const fill = (wrap, author, frameKey) => {
+        if (!wrap) return;
+        const frame = (settings && settings[frameKey]) || null;
+        wrap.innerHTML = momentAvatar(author) +
+            (frame && frame.src ? `<img class="avatar-frame" src="${mEsc(frame.src)}" style="width:${frame.size || 100}%;height:${frame.size || 100}%;transform:translate(calc(-50% + ${frame.offsetX || 0}px), calc(-50% + ${frame.offsetY || 0}px));" alt="">` : '');
+        const img = wrap.querySelector('img:not(.avatar-frame)');
+        if (img) img.classList.add('m-av-img');
+    };
+    fill(wrapP, 'partner', 'partnerAvatarFrame');
+    fill(wrapU, 'user', 'myAvatarFrame');
+
+    // 相遇纪念日：优先用设置的相遇日，否则取最早的一条「纪念日」
+    const dateInput = document.getElementById('moments-meet-date');
+    if (dateInput && !dateInput.dataset.meetBound) {
+        dateInput.dataset.meetBound = '1';
+        dateInput.addEventListener('change', () => {
+            settings.meetDate = dateInput.value || '';
+            if (typeof throttledSaveData === 'function') throttledSaveData();
+            updateMeetDaysText();
+        });
+    }
+    if (dateInput && !dateInput.value) {
+        let earliest = (settings && settings.meetDate) || '';
+        if (!earliest && Array.isArray(anniversaries)) {
+            const anns = anniversaries
+                .filter(a => a.type === 'anniversary' && a.date)
+                .map(a => a.date)
+                .sort();
+            if (anns.length) earliest = anns[0];
+        }
+        dateInput.value = earliest || '';
+    }
+    updateMeetDaysText();
+}
+
+function updateMeetDaysText() {
+    const el = document.getElementById('moments-anniv-text');
+    const dateInput = document.getElementById('moments-meet-date');
+    if (!el) return;
+    const v = (dateInput && dateInput.value) || (settings && settings.meetDate) || '';
+    if (!v) {
+        el.innerHTML = '相遇于 <em>–</em> · 选择日期开始计算';
+        return;
+    }
+    const start = new Date(v + 'T00:00:00');
+    if (isNaN(start.getTime())) {
+        el.innerHTML = '已相遇 <em>–</em> 天';
+        return;
+    }
+    const days = Math.max(0, Math.floor((Date.now() - start.getTime()) / 86400000)) + 1;
+    el.innerHTML = `相遇第 <em>${days}</em> 天`;
+}
+
+/* 长按动态卡片删除 */
+function initMomentsLongPress() {
+    const feed = document.getElementById('moments-feed');
+    if (!feed) return;
+    let timer = null, startX = 0, startY = 0, targetId = null, fired = false;
+
+    const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+
+    const start = (x, y, card) => {
+        if (!card) return;
+        // 输入框 / 按钮上的长按不触发删除
+        if (e_target_is_interactive(card, x, y)) return;
+        targetId = card.dataset.post;
+        fired = false;
+        startX = x; startY = y;
+        clear();
+        timer = setTimeout(() => {
+            fired = true;
+            if (navigator.vibrate) { try { navigator.vibrate(30); } catch (e) {} }
+            deleteMoment(targetId);
+            clear();
+        }, 500);
+    };
+
+    function e_target_is_interactive(card, x, y) {
+        const el = document.elementFromPoint(x, y);
+        return !!(el && el.closest('input, textarea, button, [data-act]'));
+    }
+
+    feed.addEventListener('touchstart', (e) => {
+        const t = e.touches[0];
+        start(t.clientX, t.clientY, e.target.closest('.moment-card'));
+    }, { passive: true });
+    feed.addEventListener('touchmove', (e) => {
+        if (!timer) return;
+        const t = e.touches[0];
+        if (Math.abs(t.clientX - startX) > 10 || Math.abs(t.clientY - startY) > 10) clear();
+    }, { passive: true });
+    feed.addEventListener('touchend', clear);
+    feed.addEventListener('touchcancel', clear);
+
+    feed.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        start(e.clientX, e.clientY, e.target.closest('.moment-card'));
+    });
+    feed.addEventListener('mousemove', (e) => {
+        if (!timer) return;
+        if (Math.abs(e.clientX - startX) > 10 || Math.abs(e.clientY - startY) > 10) clear();
+    });
+    feed.addEventListener('mouseup', clear);
+    feed.addEventListener('mouseleave', clear);
+    // 长按后阻止补发的 click
+    feed.addEventListener('click', (e) => {
+        if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; }
+    }, true);
+}
+
 function renderMomentImagePreview() {
     const box = document.getElementById('moment-image-preview');
     if (!box) return;
@@ -413,6 +529,7 @@ async function openMomentsPanel() {
     await ensureMomentsLoaded();
     momentsUnread = 0;
     updateMomentsDot();
+    renderMomentsHeader();
     renderMomentsFeed();
     renderMomentImagePreview();
     momentsPanelOpen = true;
@@ -428,6 +545,20 @@ function closeMomentsPanel() {
 
 /* ---------------- 事件绑定 ---------------- */
 function initMomentsModule() {
+    // 顶栏动态按钮（聊天界面右上角）
+    const topBtn = document.getElementById('moments-top-btn');
+    if (topBtn && !topBtn.dataset.momentsBound) {
+        topBtn.dataset.momentsBound = '1';
+        topBtn.addEventListener('click', () => { openMomentsPanel(); });
+    }
+
+    // 封面上的空白发表框：点框或点 + 号展开编辑
+    const publisher = document.getElementById('moments-publisher');
+    if (publisher && !publisher.dataset.momentsBound) {
+        publisher.dataset.momentsBound = '1';
+        publisher.addEventListener('click', () => toggleMomentComposer(true));
+    }
+
     const entry = document.getElementById('moments-function');
     if (entry && !entry.dataset.momentsBound) {
         entry.dataset.momentsBound = '1';
@@ -533,6 +664,8 @@ function initMomentsModule() {
             }
         });
     }
+
+    initMomentsLongPress();
 
     // 定时按概率判定对方是否发布动态
     if (!momentsTicker) {

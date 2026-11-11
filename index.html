@@ -199,6 +199,7 @@
             <div class="header-actions">
                 <button id="session-manager-btn" class="action-btn" title="会话管理"><i class="fas fa-comments"></i></button>
                 <button id="group-chat-btn" class="action-btn" title="群聊设置"><i class="fas fa-users"></i></button>
+                <button id="moments-top-btn" class="action-btn" title="动态" style="position:relative;"><i class="fas fa-stream"></i><span class="moments-unread-dot" id="moments-unread-dot" style="display:none;"></span></button>
                 <button id="daily-greeting-btn" class="action-btn" title="今日公告" onclick="reopenDailyGreeting()"><i class="fas fa-newspaper"></i></button>
                 <button id="theme-toggle" class="action-btn" title="切换主题"><i class="fas fa-moon"></i></button>
                 <button id="settings-btn" class="action-btn" title="设置"><i class="fas fa-cog"></i></button>
@@ -207,7 +208,6 @@
                 <div class="username" id="my-name">
                     我
                 </div>
-               
                 <div id="my-avatar-container" class="avatar-container">
                     <div class="avatar" id="my-avatar">
                         <i class="fas fa-user"></i>
@@ -218,6 +218,10 @@
                     <span id="my-status-text">在线</span>
                 </div>
             </div>
+        </div>
+        <div class="link-status-bar" id="link-status-bar">
+            <span class="ls-hearts" id="ls-hearts"></span>
+            <span class="ls-label" id="ls-label"></span>
         </div>
     </div>
 
@@ -1386,10 +1390,6 @@
                     <div class="settings-item" id="stats-function">
                         <i class="fas fa-chart-bar"></i><span>消息统计</span>
                     </div>
-                    <div class="settings-item" id="moments-function" style="position:relative;">
-                        <i class="fas fa-stream"></i><span>动态</span>
-                        <span class="moments-unread-dot" id="moments-unread-dot" style="display:none;"></span>
-                    </div>
                     <div class="settings-item" id="decision-function">
                         <i class="fas fa-comments"></i> 
                         <span>询问 · 抉择</span> 
@@ -1405,6 +1405,9 @@
                     </div>
                     <div class="settings-item" id="envelope-function">
                         <i class="fas fa-envelope"></i><span>信封投递</span>
+                    </div>
+                    <div class="settings-item" id="period-function">
+                        <i class="fas fa-calendar-check"></i><span>经期记录</span>
                     </div>
                 </div>
             </div>
@@ -2106,6 +2109,22 @@
                 </button>
             </div>
 
+            <div class="moments-cover">
+                <div class="moments-avatars">
+                    <div class="m-av" id="moments-av-partner"></div>
+                    <div class="m-av" id="moments-av-user"></div>
+                </div>
+                <div class="moments-anniv">
+                    <i class="fas fa-heart"></i>
+                    <span id="moments-anniv-text">已相遇 <em>–</em> 天</span>
+                    <input type="date" id="moments-meet-date" title="设置相遇纪念日">
+                </div>
+                <div class="moments-publisher" id="moments-publisher">
+                    <span class="mp-hint">分享此刻的心情…</span>
+                    <button class="mp-plus" id="moments-plus-btn" title="发布动态"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+
             <div class="moments-composer" id="moments-composer">
                 <textarea id="moment-text-input" class="moments-textarea" rows="3" placeholder="分享此刻的心情…"></textarea>
                 <div class="moments-composer-bar">
@@ -2126,6 +2145,40 @@
         </div>
     </div>
 
+    <div class="modal" id="period-modal">
+        <div class="modal-content">
+            <div class="modal-title">
+                <i class="fas fa-calendar-check"></i><span>经期记录</span>
+            </div>
+            <div class="period-banner" id="period-banner" style="display:none;">
+                <i class="fas fa-bell"></i>
+                <span id="period-banner-text"></span>
+            </div>
+            <p class="ad-subtitle">记录经期开始与结束，我会根据你的周期推算本次结束时间与下一次经期，并提前提醒。</p>
+            <div class="period-toggle-row">
+                <div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text-primary);">启用经期记录</div>
+                    <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">关闭后不再推算与提醒</div>
+                </div>
+                <label class="period-switch"><input type="checkbox" id="period-enabled"><span class="ps-slider"></span></label>
+            </div>
+            <div class="period-actions">
+                <button class="modal-btn modal-btn-primary" id="period-mark-start"><i class="fas fa-play"></i> 标注经期开始（今天）</button>
+                <button class="modal-btn modal-btn-secondary" id="period-mark-end"><i class="fas fa-stop"></i> 标注本次结束（今天）</button>
+            </div>
+            <div class="period-predict" id="period-predict"></div>
+            <div class="ad-history period-history">
+                <div class="ad-history-head">
+                    <span><i class="fas fa-clock-rotate-left"></i>历史记录<em id="period-count">0</em></span>
+                    <button class="ad-history-clear" id="period-clear">清空</button>
+                </div>
+                <div class="ad-history-list" id="period-list"></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="close-period">关闭</button>
+            </div>
+        </div>
+    </div>
     <div class="modal" id="wheel-modal">
         <div class="modal-content">
             <div class="modal-title">
@@ -2298,6 +2351,8 @@
     <script src="js/features/call.js"></script>
     <script src="js/features/moments.js"></script>
     <script src="js/features/decision-ask.js"></script>
+    <script src="js/features/period.js"></script>
+    <script src="js/features/link-status.js"></script>
 
     <!-- == 合并模块 == -->
     <script src="js/games.js"></script> 
