@@ -80,7 +80,7 @@ function showEnvelopeReplyPopup(letter) {
 const APPEARANCE_PANEL_TITLES = {
     'theme': '主题配色', 'font': '字体设置', 'background': '聊天背景',
     'bubble': '气泡样式', 'avatar': '聊天头像', 'css': '自定义CSS',
-    'font-bg': '背景 & 字体', 'bubble-css': '气泡 & CSS'
+    'font-bg': '背景 & 字体', 'bubble-css': '气泡 & CSS', 'home': '主页主题'
 };
 window.showAppearancePanel = function(panel) {
     const panelMap = {

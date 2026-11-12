@@ -92,6 +92,10 @@ function getMomentChance() {
 /* ---------------- 存储 ---------------- */
 async function loadMomentsData() {
     if (momentsLoaded) return true;
+    if (typeof SESSION_ID === 'undefined' || !SESSION_ID) {
+        if (typeof window.__waitSession === 'function') window.__waitSession(function () { loadMomentsData(); });
+        return false;
+    }
     try {
         const saved = await localforage.getItem(getStorageKey('moments'));
         if (Array.isArray(saved)) {

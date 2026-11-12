@@ -501,7 +501,7 @@ fileInput.addEventListener('change', function(e) {
                 settings.isDarkMode = !settings.isDarkMode; throttledSaveData(); updateUI(); showNotification(`已切换到${settings.isDarkMode ? '夜': '昼'}模式`,
                     'success');
             });
-            DOMElements.settingsModal.settingsBtn.addEventListener('click', () => {
+            if (DOMElements.settingsModal.settingsBtn) DOMElements.settingsModal.settingsBtn.addEventListener('click', () => {
                 showModal(DOMElements.settingsModal.modal);
             });
             DOMElements.favoritesModal.favoritesBtn.addEventListener('click', () => {
@@ -3304,5 +3304,194 @@ window.exitCollapseMode = function() {
         document.addEventListener('DOMContentLoaded', tryApply);
     } else {
         setTimeout(tryApply, 400);
+    }
+})();
+
+/* ==================== 主页/新底栏/主题 新增绑定 ==================== */
+(function initNewUIBindings() {
+    function bind() {
+        /* —— 底部栏 + 菜单 —— */
+        const plusBtn = document.getElementById('plus-menu-btn');
+        const plusPop = document.getElementById('plus-menu-popover');
+        if (plusBtn && plusPop && !plusBtn.dataset.newBound) {
+            plusBtn.dataset.newBound = '1';
+            plusBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = plusPop.classList.toggle('open');
+                plusBtn.classList.toggle('active', open);
+            });
+            document.addEventListener('click', (e) => {
+                if (!plusPop.contains(e.target) && e.target !== plusBtn) {
+                    plusPop.classList.remove('open');
+                    plusBtn.classList.remove('active');
+                }
+            });
+        }
+        const pmVideo = document.getElementById('pm-video-call');
+        if (pmVideo && !pmVideo.dataset.newBound) {
+            pmVideo.dataset.newBound = '1';
+            pmVideo.addEventListener('click', () => {
+                if (plusPop) plusPop.classList.remove('open');
+                if (window.callFeature && typeof window.callFeature.startCall === 'function') window.callFeature.startCall(false);
+            });
+        }
+        const pmAlbum = document.getElementById('pm-album');
+        if (pmAlbum && !pmAlbum.dataset.newBound) {
+            pmAlbum.dataset.newBound = '1';
+            pmAlbum.addEventListener('click', () => {
+                if (plusPop) plusPop.classList.remove('open');
+                const imgInput = document.getElementById('image-input');
+                if (imgInput) imgInput.click();
+            });
+        }
+        const pmAsk = document.getElementById('pm-ask');
+        if (pmAsk && !pmAsk.dataset.newBound) {
+            pmAsk.dataset.newBound = '1';
+            pmAsk.addEventListener('click', () => {
+                if (plusPop) plusPop.classList.remove('open');
+                // 问一问：不含小工具
+                const tools = document.getElementById('ad-tools-section');
+                const toolsTitle = document.getElementById('ad-tools-title');
+                if (tools) tools.style.display = 'none';
+                if (toolsTitle) toolsTitle.style.display = 'none';
+                showModal(document.getElementById('decision-menu-modal'));
+            });
+        }
+
+        /* —— 高级功能入口打开问一问时恢复小工具 —— */
+        const decEntry = document.getElementById('decision-function');
+        if (decEntry && !decEntry.dataset.newBound) {
+            decEntry.dataset.newBound = '1';
+            decEntry.addEventListener('click', () => {
+                setTimeout(() => {
+                    const tools = document.getElementById('ad-tools-section');
+                    const toolsTitle = document.getElementById('ad-tools-title');
+                    if (tools) tools.style.display = '';
+                    if (toolsTitle) toolsTitle.style.display = '';
+                }, 100);
+            });
+        }
+
+        /* —— 红包/转账概率滑杆 —— */
+        const rpSlider = document.getElementById('redpacket-chance-slider');
+        const rpValue = document.getElementById('redpacket-chance-value');
+        if (rpSlider && !rpSlider.dataset.newBound) {
+            rpSlider.dataset.newBound = '1';
+            const updateRp = () => { if (rpValue) rpValue.textContent = rpSlider.value + '%'; };
+            if (typeof settings !== 'undefined' && settings.redpacketChance !== undefined) rpSlider.value = settings.redpacketChance;
+            updateRp();
+            rpSlider.addEventListener('input', (e) => {
+                const v = parseInt(e.target.value);
+                if (typeof settings !== 'undefined') { settings.redpacketChance = v; if (typeof throttledSaveData === 'function') throttledSaveData(); }
+                updateRp();
+            });
+        }
+
+        /* —— 外观设置：主页主题 —— */
+        const accentInput = document.getElementById('home-theme-accent');
+        const frameInput = document.getElementById('home-theme-frame');
+        const bgUpload = document.getElementById('home-theme-bg-upload');
+        const bgClear = document.getElementById('home-theme-bg-clear');
+        const bgInput = document.getElementById('home-theme-bg-input');
+        const bgPreview = document.getElementById('home-theme-bg-preview');
+
+        function hexToRgbStr(hex) {
+            const m = hex.replace('#', '');
+            const r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
+            return `${r}, ${g}, ${b}`;
+        }
+        function applyAndSaveHomeTheme() {
+            if (typeof settings === 'undefined') return;
+            if (!settings.homeTheme) settings.homeTheme = {};
+            const page = document.getElementById('home-page');
+            if (accentInput && accentInput.value) {
+                settings.homeTheme.accent = accentInput.value;
+                if (page) {
+                    page.style.setProperty('--home-accent', accentInput.value);
+                    page.style.setProperty('--home-accent-rgb', hexToRgbStr(accentInput.value));
+                }
+            }
+            if (frameInput && frameInput.value) {
+                settings.homeTheme.frame = frameInput.value;
+                if (page) page.style.setProperty('--home-frame', frameInput.value);
+            }
+            if (bgPreview) bgPreview.style.backgroundImage = settings.homeTheme.bg ? `url(${settings.homeTheme.bg})` : 'none';
+            if (typeof throttledSaveData === 'function') throttledSaveData();
+            if (typeof window.applyHomeTheme === 'function') window.applyHomeTheme();
+        }
+
+        if (accentInput && !accentInput.dataset.newBound) {
+            accentInput.dataset.newBound = '1';
+            if (typeof settings !== 'undefined' && settings.homeTheme && settings.homeTheme.accent) accentInput.value = settings.homeTheme.accent;
+            accentInput.addEventListener('input', applyAndSaveHomeTheme);
+            if (!accentInput.value || accentInput.value === '#000000') {
+                accentInput.value = (window.HOME_THEME_DEFAULT && window.HOME_THEME_DEFAULT.accent) || '#7f93a6';
+            }
+            const rst = document.getElementById('home-theme-accent-reset');
+            if (rst) rst.addEventListener('click', () => {
+                if (typeof settings !== 'undefined' && settings.homeTheme) settings.homeTheme.accent = '';
+                if (typeof throttledSaveData === 'function') throttledSaveData();
+                if (typeof window.applyHomeTheme === 'function') window.applyHomeTheme();
+                accentInput.value = (window.HOME_THEME_DEFAULT && window.HOME_THEME_DEFAULT.accent) || '#7f93a6';
+                if (typeof showNotification === 'function') showNotification('主页主题色已恢复默认', 'success', 1500);
+            });
+        }
+        if (frameInput && !frameInput.dataset.newBound) {
+            frameInput.dataset.newBound = '1';
+            if (typeof settings !== 'undefined' && settings.homeTheme && settings.homeTheme.frame) frameInput.value = settings.homeTheme.frame;
+            frameInput.addEventListener('input', applyAndSaveHomeTheme);
+            if (!frameInput.value) frameInput.value = (window.HOME_THEME_DEFAULT && window.HOME_THEME_DEFAULT.frame) || '#ffffff';
+            const rst = document.getElementById('home-theme-frame-reset');
+            if (rst) rst.addEventListener('click', () => {
+                const def = (window.HOME_THEME_DEFAULT && window.HOME_THEME_DEFAULT.frame) || '#ffffff';
+                if (typeof settings !== 'undefined' && settings.homeTheme) settings.homeTheme.frame = def;
+                frameInput.value = def;
+                applyAndSaveHomeTheme();
+            });
+        }
+        if (bgUpload && bgInput && !bgUpload.dataset.newBound) {
+            bgUpload.dataset.newBound = '1';
+            bgUpload.addEventListener('click', () => bgInput.click());
+            bgInput.addEventListener('change', (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    let b64 = ev.target.result;
+                    try { if (typeof optimizeImage === 'function') b64 = await optimizeImage(file, 900, 0.8); } catch (err) {}
+                    if (typeof settings !== 'undefined') {
+                        if (!settings.homeTheme) settings.homeTheme = {};
+                        settings.homeTheme.bg = b64;
+                        if (typeof throttledSaveData === 'function') throttledSaveData();
+                    }
+                    if (bgPreview) bgPreview.style.backgroundImage = `url(${b64})`;
+                    if (typeof window.applyHomeTheme === 'function') window.applyHomeTheme();
+                    if (typeof showNotification === 'function') showNotification('主页背景已更新 ✓', 'success', 1800);
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
+            });
+        }
+        if (bgClear && !bgClear.dataset.newBound) {
+            bgClear.dataset.newBound = '1';
+            bgClear.addEventListener('click', () => {
+                if (typeof settings !== 'undefined' && settings.homeTheme) settings.homeTheme.bg = '';
+                if (typeof throttledSaveData === 'function') throttledSaveData();
+                if (bgPreview) bgPreview.style.backgroundImage = 'none';
+                if (typeof window.applyHomeTheme === 'function') window.applyHomeTheme();
+                if (typeof showNotification === 'function') showNotification('已恢复默认主页背景', 'success', 1500);
+            });
+        }
+        if (bgPreview && typeof settings !== 'undefined' && settings.homeTheme && settings.homeTheme.bg) {
+            bgPreview.style.backgroundImage = `url(${settings.homeTheme.bg})`;
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bind);
+        document.addEventListener('DOMContentLoaded', () => setTimeout(bind, 800));
+    } else {
+        bind();
+        setTimeout(bind, 800);
     }
 })();
