@@ -25,10 +25,6 @@ function adTimeLabel(ts) {
 }
 
 async function loadDecisionHistory() {
-    if (typeof SESSION_ID === 'undefined' || !SESSION_ID) {
-        if (typeof window.__waitSession === 'function') window.__waitSession(loadDecisionHistory);
-        return;
-    }
     try {
         const saved = await localforage.getItem(getStorageKey('decisionHistory'));
         if (Array.isArray(saved)) decisionHistory = saved;

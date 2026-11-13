@@ -148,9 +148,6 @@ function _renderListContentOnly() {
             itemsToRender = stickerLibrary;
             renderType = 'image';
         }
-    } else if (currentMajorTab === 'slacking') {
-        if (currentSubTab === 'slkPlaces') itemsToRender = (typeof slackingPlaces !== 'undefined' ? slackingPlaces : []);
-        else if (currentSubTab === 'slkActs') itemsToRender = (typeof slackingActs !== 'undefined' ? slackingActs : []);
     } else if (currentMajorTab === 'atmosphere') {
         if (currentSubTab === 'pokes') itemsToRender = customPokes;
         else if (currentSubTab === 'statuses') itemsToRender = customStatuses;
@@ -239,9 +236,6 @@ function renderReplyLibrary() {
             itemsToRender = stickerLibrary;
             renderType = 'image';
         }
-    } else if (currentMajorTab === 'slacking') {
-        if (currentSubTab === 'slkPlaces') itemsToRender = (typeof slackingPlaces !== 'undefined' ? slackingPlaces : []);
-        else if (currentSubTab === 'slkActs') itemsToRender = (typeof slackingActs !== 'undefined' ? slackingActs : []);
     } else if (currentMajorTab === 'atmosphere') {
         if (currentSubTab === 'pokes') itemsToRender = customPokes;
         else if (currentSubTab === 'statuses') itemsToRender = customStatuses;
@@ -1354,8 +1348,6 @@ function deleteItem(index) {
     else if (currentSubTab === 'statuses') customStatuses.splice(index, 1);
     else if (currentSubTab === 'mottos') customMottos.splice(index, 1);
     else if (currentSubTab === 'intros') customIntros.splice(index, 1);
-    else if (currentSubTab === 'slkPlaces') { slackingPlaces.splice(index, 1); if (window.slackingSavePools) window.slackingSavePools(); }
-    else if (currentSubTab === 'slkActs') { slackingActs.splice(index, 1); if (window.slackingSavePools) window.slackingSavePools(); }
     if (item && ctx.groups) {
         ctx.groups.forEach(g => { if (g.items) g.items = g.items.filter(t => t !== item); });
     }
@@ -1389,8 +1381,6 @@ function editItem(index, oldText) {
     else if (currentSubTab === 'statuses') customStatuses[index] = newText.trim();
     else if (currentSubTab === 'mottos') customMottos[index] = newText.trim();
     else if (currentSubTab === 'intros') customIntros[index] = newText.trim();
-    else if (currentSubTab === 'slkPlaces') { slackingPlaces[index] = newText.trim(); if (window.slackingSavePools) window.slackingSavePools(); }
-    else if (currentSubTab === 'slkActs') { slackingActs[index] = newText.trim(); if (window.slackingSavePools) window.slackingSavePools(); }
     throttledSaveData();
     renderReplyLibrary();
 }
@@ -2310,10 +2300,6 @@ function initReplyLibraryListeners() {
             }
             if (currentSubTab === 'custom' || currentSubTab === 'pokes' || currentSubTab === 'statuses') {
                 _showBatchAddDialog(); return;
-            }
-            if (currentSubTab === 'slkPlaces' || currentSubTab === 'slkActs') {
-                if (typeof window.showSlackingBatchAdd === 'function') window.showSlackingBatchAdd(currentSubTab);
-                return;
             }
             let input;
             if (currentSubTab === 'intros') {

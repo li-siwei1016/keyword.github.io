@@ -312,7 +312,7 @@ let isTourActive = false;
 const tourSteps = [
     {
         title: "✨ 欢迎来到「传讯」",
-        content: "这里是你们专属的私密空间。<br><br>这个教程共 <b>26 步</b>，带你从头到尾认识每一个功能，建议完整看完哦🥺<br><br>点击「下一步」开始吧！",
+        content: "这里是你们专属的私密空间。<br><br>这个教程共 <b>20 步</b>，带你从头到尾认识每一个功能，建议完整看完哦🥺<br><br>点击「下一步」开始吧！",
         position: 'center'
     },
     {
@@ -364,53 +364,53 @@ const tourSteps = [
         position: 'top'
     },
     {
-        element: '#plus-menu-btn',
-        title: "➕ 更多功能",
-        content: "点击这个<b>加号</b>可以展开菜单：<b>视频通话、相册（发送图片）、问一问、红包 / 转账</b>。<br><br>表情包在输入框右侧的笑脸按钮里。",
+        element: '#attachment-btn',
+        title: "🖼️ 发送图片 / 表情包",
+        content: "点击这里可以<b>发送图片</b>，支持相册图片和表情包。<br><br>你还可以在「高级功能 → 回复库」中上传自定义的表情，到时候对方也会发给你！",
         position: 'top'
     },
     {
-        element: '#combo-btn',
-        title: "😀 表情包 & 拍一拍",
-        content: "输入框右侧的笑脸是<b>表情包</b>：可以用「我 / 对方」两套表情，也能<b>拍一拍</b>对方。<br><br>「高级功能 → 自定义拍一拍」里还能添加更多动作。",
+        element: '#poke-btn',
+        title: "👋 拍一拍互动",
+        content: "这是「<b>拍一拍</b>」功能，发出后会显示一条互动消息，比如「轻拍了你一下」。<br><br>可以在「高级功能 → 自定义拍一拍」里添加更多的动作！",
         position: 'top'
     },
     {
         element: '#continue-btn',
         title: "让 Ta 继续说",
-        content: "不知道说什么了？或者想让 Ta 多说几句？<br><br>点击这个按钮，<b>梦角会主动找你说话。</b>",
+        content: "不知道说什么了？或者想让 Ta 多说几句？<br><br>点击这个按钮，<b>梦角会主动找你说话。",
         position: 'top'
     },
     {
-        element: '#home-top-btn',
-        title: "🏠 回到主页",
-        content: "点击<b>小房子</b>回到主页：那里有<b>链接波纹、相框、心晴手账、纪念日、聊天、朋友圈、信件</b>与<b>字卡库 / 高级功能 / 设置</b>。<br>引导结束后我们就回主页看看！",
+        element: '#settings-btn',
+        title: "⚙️ 设置中心",
+        content: "所有个性化配置都在这个<b>设置按钮</b>里，我们点进去看一下！<br>",
         position: 'bottom',
         onBefore: () => { if (isTourActive) document.querySelectorAll('.modal').forEach(m => hideModal(m)); }
     },
     {
         element: '#appearance-settings',
         title: "🎨 外观设置",
-        content: "<b>外观设置</b>里可以：<br>• 切换 10 款主题配色（金/蓝/粉…）<br>• 调整字体大小、更换聊天背景图<br>• 自定义气泡样式 CSS<br>• <b>主页主题</b>：改主页主题色、相框颜色、上传背景图",
+        content: "<b>外观设置</b>里可以：<br>• 切换 10 款主题配色（金/蓝/粉…）<br>• 调整字体大小<br>• 更换聊天背景图<br>• 自定义气泡样式 CSS<br>",
         position: 'bottom',
         onBefore: () => { if (isTourActive) showModal(DOMElements.settingsModal.modal); }
     },
     {
         element: '#chat-settings',
         title: "💬 聊天设置",
-        content: "<b>聊天设置</b>里可以调整：<br>• 消息音效、已读回执<br>• 对方回复速度与节奏<br>• <b>红包 / 转账概率</b>（Ta 主动发红包的机会）<br>• 动态发布频率",
+        content: "<b>聊天设置</b>里可以调整：<br>• 消息音效开关<br>• 已读回执显示<br>• 对方回复速度（快/慢）<br>• 消息气泡样式（圆角/方形）",
         position: 'bottom'
     },
     {
-        element: '#profiles-settings',
-        title: "👥 对象管理",
-        content: "想同时经营几段故事？<b>对象管理</b>可以建立多个对象的档案，切换后<b>聊天、动态、设置等数据各自独立</b>，互不打扰。",
+        element: '#advanced-settings',
+        title: "🚀 高级功能 — 必看！",
+        content: "<b>高级功能</b>是整个应用最强大的板块，里面有：<br>• <b>心晴手账</b>：记录每天的心情<br>• <b>信封投递</b>：给梦角写一封信<br>• <b>纪念日</b>：倒计时 / 纪念天数<br>• <b>运势占卜</b>：每日运势<br>• <b>自定义回复</b>：让梦角说你想听的话<br>• <b>音乐播放器</b>：背景音乐",
         position: 'bottom'
     },
     {
         element: '#data-settings',
         title: "💾 数据管理",
-        content: "<b>数据管理</b>里可以：<br>• 导出聊天记录（备份到本地）<br>• 导入之前备份的记录<br>• 查看存储空间占用<br>• 重置所有数据<br>• 重放本教程",
+        content: "<b>数据管理</b>里可以：<br>• 导出聊天记录（备份到本地）<br>• 导入之前备份的记录<br>• 查看存储空间占用<br>• 开启后台消息通知推送<br>• 重置所有数据<br>• 重放本教程",
         position: 'top'
     },
     {
@@ -421,9 +421,10 @@ const tourSteps = [
         onBefore: () => { if (isTourActive) hideModal(DOMElements.settingsModal.modal); }
     },
     {
-        title: "⭐ 收藏一条消息",
-        content: "在聊天里<b>长按</b>一条消息，会弹出操作菜单：<br>• ⭐ <b>收藏</b>：保存到收藏夹<br>• ↩️ <b>回复</b>：引用这条消息回复<br>• 📝 <b>注释</b>：给消息加备注<br>• 🗑️ <b>删除</b><br><br>收藏夹在「<b>高级功能 → 消息统计</b>」里，随时可以翻阅。",
-        position: 'center'
+        element: '#favorites-btn',
+        title: "⭐ 收藏夹",
+        content: "长按或点击一条消息，会弹出操作菜单，可以把消息<b>收藏</b>起来。<br><br>所有收藏的消息都会保存在这个收藏夹里，随时可以翻阅回味～",
+        position: 'bottom'
     },
     {
         element: '#session-manager-btn',
@@ -432,35 +433,9 @@ const tourSteps = [
         position: 'bottom'
     },
     {
-        element: '#home-page',
-        title: "🏠 主页 · 概览",
-        content: "主页是你们的小小宇宙：<b>第一行</b>头像、链接波纹与签名；<b>第二行</b>时间问候、Ta 的状态、相遇纪念日；<b>第三行</b>聊天 / 朋友圈 / 信件；<b>第四行</b>字卡库 / 高级功能 / 设置。",
-        position: 'center',
-        onBefore: () => { if (isTourActive && typeof window.showHomePage === 'function') window.showHomePage(); }
-    },
-    {
-        element: '#home-frames-card',
-        title: "🖼 三合一相框",
-        content: "<b>单击</b>相框可轮换照片；<b>空白状态</b>下点击即可添加手机相册里的照片；<b>长按</b>会弹出「更换 / 删除」。",
-        position: 'bottom'
-    },
-    {
-        element: '#home-status-mood',
-        title: "📱 Ta 的手机 & 纪念日",
-        content: "中间是 <b>Ta 的手机</b>：能看到 Ta 的心情、状态与摸鱼状态，点进去还有 Ta 的朋友圈、信笺、心情手账和摸鱼小记；右侧是<b>相遇纪念日</b>，从相遇第一天算起，点击能看所有纪念日。",
-        position: 'bottom'
-    },
-    {
-        element: '#home-tile-chat',
-        title: "💬 聊天 / 朋友圈 / 信件",
-        content: "第三行是三个入口：<b>聊天</b>（全部聊天功能）、<b>朋友圈</b>（动态，界面参考微信朋友圈）、<b>信件</b>（信封投递）。",
-        position: 'top'
-    },
-    {
-        element: '#home-tile-replies',
-        title: "🗂 字卡库 / 高级功能 / 设置",
-        content: "第四行：<b>字卡库</b>里是自定义回复的全套功能；<b>高级功能</b>有消息统计、悬浮音乐、运势占卜、询问抉择、经期记录、重要日、日记本与备忘录；<b>设置</b>管理外观、聊天、数据与对象。",
-        position: 'top'
+        title: "✋ 消息操作提示",
+        content: "点击任意一条消息，会出现操作菜单：<br>• ⭐ <b>收藏</b>：保存到收藏夹<br>• ↩️ <b>回复</b>：引用这条消息回复<br>• 📝 <b>注释</b>：给消息添加备注<br>• 🗑️ <b>删除</b>：删除这条消息",
+        position: 'center'
     },
     {
         title: "🎉 你已掌握所有功能！",
@@ -470,15 +445,7 @@ const tourSteps = [
 ];
 
 function startTour() {
-    // 步数文案跟随实际配置
-    try {
-        if (tourSteps[0] && tourSteps[0].content.indexOf('步</b>') > -1) {
-            tourSteps[0].content = tourSteps[0].content.replace(/共 <b>\d+ 步<\/b>/, '共 <b>' + tourSteps.length + ' 步</b>');
-        }
-    } catch (e) {}
     isTourActive = true;
-    // 引导期间展开顶栏（平时默认收起，双击唤出）
-    try { if (typeof window.setChatHeaderCollapsed === 'function') window.setChatHeaderCollapsed(false); } catch (e) {}
     tourOverlay.style.display = 'block';
     setTimeout(() => tourOverlay.classList.add('active'), 10);
     currentTourStep = 0;
@@ -496,10 +463,6 @@ function endTour() {
         tourHighlightBox.style.opacity = '0';
     }, 300);
     localforage.setItem(APP_PREFIX + 'tour_seen', 'true');
-    // 引导结束后恢复「顶栏默认收起，双击唤出」的状态
-    try { if (typeof window.setChatHeaderCollapsed === 'function') window.setChatHeaderCollapsed(true); } catch (e) {}
-    // 引导结束后进入主页
-    setTimeout(() => { if (typeof window.showHomePage === 'function') window.showHomePage(); }, 500);
     document.querySelectorAll('.modal').forEach(m => hideModal(m));
     setTimeout(function() {
         if (typeof window.tryShowDailyGreeting === 'function') {

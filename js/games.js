@@ -1324,7 +1324,7 @@ function initComboMenu() {
                 <div class="empty-sticker-tip">
                     <i class="far fa-images"></i>
                     对方表情库还是空的哦<br>
-                    请去"字卡库"->"表情库"中添加图片~
+                    请去"高级功能"->"自定义回复"->"表情库"中添加图片~
                 </div>
             `;
             return;

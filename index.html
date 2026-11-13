@@ -180,114 +180,6 @@
     <button id="immersive-exit-btn" onclick="toggleImmersiveMode(false)" title="退出沉浸模式">
 <i class="fas fa-expand"></i>
 </button>
-
-    <!-- ==================== 主页 ==================== -->
-    <div id="home-page" style="display:none;">
-        <div class="home-scroll">
-            <!-- 第一行：链接 + 相框 -->
-            <div class="home-row home-row1">
-                <div class="home-card home-pair-card">
-                    <div class="home-pair-avatars">
-                        <div class="home-av-wrap">
-                            <div class="home-av" id="home-av-partner"><i class="fas fa-user"></i></div>
-                            <div class="home-sig" id="home-sig-partner">…</div>
-                        </div>
-                        <div class="home-link-wave" title="链接波纹">
-                            <span class="hl-dot"></span><span class="hl-dot"></span><span class="hl-dot"></span>
-                            <span class="hl-line"></span>
-                            <i class="fas fa-heart hl-heart"></i>
-                        </div>
-                        <div class="home-av-wrap">
-                            <div class="home-av" id="home-av-me"><i class="fas fa-user"></i></div>
-                            <div class="home-sig" id="home-sig-me">…</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="home-card home-frames-card" id="home-frames-card">
-                    <div class="home-frames" id="home-frames">
-                        <div class="home-frame" data-frame="0"><div class="hf-img"></div><span class="hf-empty-hint">＋</span></div>
-                        <div class="home-frame" data-frame="1"><div class="hf-img"></div><span class="hf-empty-hint">＋</span></div>
-                        <div class="home-frame" data-frame="2"><div class="hf-img"></div><span class="hf-empty-hint">＋</span></div>
-                    </div>
-                    <div class="home-frames-tip">点击轮换 · 长按管理</div>
-                </div>
-            </div>
-
-            <!-- 第二行：时间 / 对方状态 / 纪念日 -->
-            <div class="home-row home-row2">
-                <div class="home-card home-clock-card" id="home-clock-card">
-                    <div class="home-clock-date" id="home-clock-date">—</div>
-                    <div class="home-clock-time" id="home-clock-time">—</div>
-                    <div class="home-clock-greet" id="home-clock-greet">—</div>
-                </div>
-                <div class="home-card home-status-card" id="home-status-mood" title="查看 Ta 的手机">
-                    <div class="hsc-label"><i class="fas fa-mobile-screen"></i> Ta 的手机</div>
-                    <div class="hsc-mood" id="home-status-mood-text">还没有记录</div>
-                    <div class="hsc-status" id="home-status-status-text">状态：—</div>
-                    <div class="hsc-slacking" id="home-status-slacking-text" style="display:none;"></div>
-                </div>
-                <div class="home-card home-anniv-card" id="home-anniv-card" title="查看所有纪念日">
-                    <div class="hac-label"><i class="fas fa-heart"></i> 相遇纪念日</div>
-                    <div class="hac-days"><em id="home-anniv-days">—</em> 天</div>
-                    <div class="hac-sub" id="home-anniv-date">点击查看所有纪念日</div>
-                </div>
-            </div>
-
-            <!-- 第三行：聊天 / 朋友圈 / 信件 -->
-            <div class="home-row home-row3">
-                <div class="home-tile" id="home-tile-chat"><i class="fas fa-comments"></i><span>聊天</span><span class="moments-unread-dot" id="chat-unread-dot" style="display:none;"></span></div>
-                <div class="home-tile" id="home-tile-moments"><i class="fas fa-camera-retro"></i><span>朋友圈</span><span class="moments-unread-dot" id="moments-unread-dot" style="display:none;"></span></div>
-                <div class="home-tile" id="home-tile-letter"><i class="fas fa-envelope"></i><span>信件</span></div>
-            </div>
-
-            <!-- 第四行：字卡库 / 高级功能 / 设置 -->
-            <div class="home-row home-row4">
-                <div class="home-tile" id="home-tile-replies"><i class="fas fa-comment-dots"></i><span>字卡库</span></div>
-                <div class="home-tile" id="home-tile-advanced"><i class="fas fa-tools"></i><span>高级功能</span></div>
-                <div class="home-tile" id="home-tile-settings"><i class="fas fa-gear"></i><span>设置</span></div>
-            </div>
-
-            <!-- 页脚：填满底部留白，收束版面 -->
-            <div class="home-foot">
-                <span class="home-foot-line"></span>
-                <span class="home-foot-text">愿你我如星月，遥遥相照</span>
-                <span class="home-foot-line"></span>
-            </div>
-        </div>
-        <input type="file" id="home-photo-input" accept="image/*" style="display:none;">
-    </div>
-
-    <!-- 隐藏入口桩：保留既有 JS 绑定，供主页磁贴触发 -->
-    <!-- Ta 的手机 -->
-    <div class="modal" id="phone-modal">
-        <div class="modal-content phone-modal-content">
-            <div class="phone-header">
-                <div class="phone-title"><i class="fas fa-mobile-screen"></i> Ta 的手机</div>
-                <button class="modal-btn modal-btn-secondary phone-close-btn" id="close-phone-modal">关闭</button>
-            </div>
-            <div class="phone-body">
-                <div class="phone-menu" id="phone-menu">
-                    <div class="phone-menu-item" data-phone="status"><i class="fas fa-heart-pulse"></i><div class="pmi-text"><b>Ta 的状态</b><span>当前状态与心情（含摸鱼状态）</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
-                    <div class="phone-menu-item" data-phone="moments"><i class="fas fa-camera-retro"></i><div class="pmi-text"><b>Ta 的朋友圈</b><span>对方自主发布的动态</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
-                    <div class="phone-menu-item" data-phone="letters"><i class="fas fa-envelope-open-text"></i><div class="pmi-text"><b>Ta 的信笺</b><span>对方自主投递的信封</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
-                    <div class="phone-menu-item" data-phone="mood"><i class="fas fa-book-open"></i><div class="pmi-text"><b>心情手账</b><span>每天的心情与天气</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
-                    <div class="phone-menu-item" data-phone="slacking"><i class="fas fa-coffee"></i><div class="pmi-text"><b>摸鱼小记</b><span>往日的摸鱼状态记录</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
-                </div>
-                <div class="phone-view" id="phone-view" style="display:none;">
-                    <button class="phone-back" id="phone-view-back"><i class="fas fa-chevron-left"></i> 返回</button>
-                    <div class="phone-view-body" id="phone-view-body"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="home-entry-stubs" style="display:none;">
-        <div id="custom-replies-function"></div>
-        <div id="mood-function"></div>
-        <div id="envelope-function"></div>
-        <button id="moments-top-btn"></button>
-    </div>
-
     <div class="header">
         <div class="header-motto"></div>
         <div class="header-inner">
@@ -307,9 +199,10 @@
             <div class="header-actions">
                 <button id="session-manager-btn" class="action-btn" title="会话管理"><i class="fas fa-comments"></i></button>
                 <button id="group-chat-btn" class="action-btn" title="群聊设置"><i class="fas fa-users"></i></button>
+                <button id="moments-top-btn" class="action-btn" title="动态" style="position:relative;"><i class="fas fa-stream"></i><span class="moments-unread-dot" id="moments-unread-dot" style="display:none;"></span></button>
                 <button id="daily-greeting-btn" class="action-btn" title="今日公告" onclick="reopenDailyGreeting()"><i class="fas fa-newspaper"></i></button>
                 <button id="theme-toggle" class="action-btn" title="切换主题"><i class="fas fa-moon"></i></button>
-                <button id="home-top-btn" class="action-btn" title="主页"><i class="fas fa-house"></i></button>
+                <button id="settings-btn" class="action-btn" title="设置"><i class="fas fa-cog"></i></button>
             </div>
              <div class="user-info">
                 <div class="username" id="my-name">
@@ -447,14 +340,7 @@
         <div class="input-area">
     <button id="collapse-expand-btn" title="展开更多" style="display:none;width:36px;height:36px;border:none;border-radius:50%;cursor:pointer;background:rgba(var(--accent-color-rgb),0.12);color:var(--accent-color);font-size:14px;transition:all 0.25s;flex-shrink:0;align-items:center;justify-content:center;" onclick="window.toggleCollapsedExtras && window.toggleCollapsedExtras()"><i class="fas fa-chevron-up"></i></button>
     <button class="continue-btn input-btn" id="continue-btn" title="让对方继续说"><i class="fas fa-ellipsis-h"></i></button>
-    <button class="plus-menu-btn input-btn" id="plus-menu-btn" title="更多功能"><i class="fas fa-plus"></i></button>
-    <button id="attachment-btn" style="display:none;" tabindex="-1"></button>
-    <div class="plus-menu-popover" id="plus-menu-popover">
-        <button class="plus-menu-item" id="pm-video-call"><i class="fas fa-video"></i><span>视频通话</span></button>
-        <button class="plus-menu-item" id="pm-album"><i class="fas fa-image"></i><span>相册</span></button>
-        <button class="plus-menu-item" id="pm-ask"><i class="fas fa-comments"></i><span>问一问</span></button>
-        <button class="plus-menu-item" id="pm-redpacket"><i class="fas fa-gift"></i><span>红包 / 转账</span></button>
-    </div>
+    <button class="attachment-btn input-btn collapse-hideable" id="attachment-btn" title="发送图片"><i class="fas fa-image"></i></button>
 
     <textarea class="message-input" id="message-input" placeholder="" rows="1"></textarea>
     
@@ -749,13 +635,13 @@
                     <i class="fas fa-comments"></i>
                     <span>聊天设置</span>
                 </div>
+                <div class="settings-card" id="advanced-settings">
+                    <i class="fas fa-tools"></i>
+                    <span>高级功能</span>
+                </div>
                 <div class="settings-card" id="data-settings">
                     <i class="fas fa-database"></i>
                     <span>数据管理</span>
-                </div>
-                <div class="settings-card" id="profiles-settings">
-                    <i class="fas fa-user-group"></i>
-                    <span>对象管理</span>
                 </div>
             </div>
 
@@ -797,9 +683,6 @@
     </div>
     <div class="settings-card" onclick="showAppearancePanel('avatar')" style="cursor:pointer;">
         <i class="fas fa-user-circle"></i><span>聊天头像</span>
-    </div>
-    <div class="settings-card" onclick="showAppearancePanel('home')" style="cursor:pointer;">
-        <i class="fas fa-house"></i><span>主页主题</span>
     </div>
 </div>
 
@@ -1151,35 +1034,6 @@
             <div id="global-css-status" style="display:none;margin-top:8px;font-size:11px;color:var(--text-secondary);padding:6px 10px;background:rgba(var(--accent-color-rgb),0.06);border-radius:8px;"></div>
         </div>
     </div>
-
-    <div id="appearance-panel-home" class="appearance-sub-panel" style="display:none;">
-        <div class="settings-section">
-            <div class="settings-section-title"><i class="fas fa-house"></i>主页主题</div>
-            <p class="ad-subtitle" style="margin-top:0;">自定义「主页」的主题色、相框颜色与背景图。</p>
-            <div class="home-theme-row">
-                <span class="cs-slider-label">主题色</span>
-                <input type="color" id="home-theme-accent" value="#7f93a6">
-                <button class="ti-text-reset-btn" id="home-theme-accent-reset">恢复默认</button>
-            </div>
-            <div class="home-theme-row">
-                <span class="cs-slider-label">相框颜色</span>
-                <input type="color" id="home-theme-frame" value="#ffffff">
-                <button class="ti-text-reset-btn" id="home-theme-frame-reset">恢复雪白</button>
-            </div>
-            <div class="home-theme-row" style="align-items:flex-start;">
-                <span class="cs-slider-label" style="margin-top:6px;">背景图</span>
-                <div class="home-theme-bg-actions">
-                    <div class="home-theme-bg-preview" id="home-theme-bg-preview"></div>
-                    <div class="home-theme-bg-btns">
-                        <button class="modal-btn modal-btn-secondary" id="home-theme-bg-upload"><i class="fas fa-image"></i> 上传图片</button>
-                        <button class="modal-btn modal-btn-secondary" id="home-theme-bg-clear"><i class="fas fa-eraser"></i> 清除</button>
-                    </div>
-                    <input type="file" id="home-theme-bg-input" accept="image/*" style="display:none;">
-                </div>
-            </div>
-            <p class="cs-hint">主题色影响主页按钮、爱心与波纹的颜色；背景图铺满主页。</p>
-        </div>
-    </div>
 </div>
 
             <div class="modal-buttons" style="position:sticky;bottom:0;background:var(--secondary-bg);border-top:1px solid var(--border-color);padding:12px 0 0;z-index:10;margin-top:8px;margin-left:-24px;margin-right:-24px;padding-left:24px;padding-right:24px;padding-bottom:max(12px, env(safe-area-inset-bottom, 0px));">
@@ -1316,16 +1170,6 @@
                         </div>
                     </div>
 
-                    <p class="cs-group-label" style="margin-top:4px;">红包 · 转账</p>
-                    <div class="cs-card">
-                        <div class="cs-slider-row">
-                            <span class="cs-slider-label">Ta 发送概率</span>
-                            <input type="range" min="0" max="100" step="5" value="10" class="font-size-slider" id="redpacket-chance-slider">
-                            <span class="cs-slider-val" id="redpacket-chance-value">10%</span>
-                        </div>
-                        <p class="cs-hint" style="margin-top:6px;">聊天过程中 Ta 随机发红包或转账的概率，0 为关闭</p>
-                    </div>
-
                     <p class="cs-group-label" style="margin-top:4px;">动态</p>
                     <div class="cs-card">
                         <div class="cs-slider-row">
@@ -1334,12 +1178,6 @@
                             <span class="cs-slider-val" id="moment-chance-value">30%</span>
                         </div>
                         <p class="cs-hint" style="margin-top:6px;">概率越高，Ta 越常在「动态」里发布内容</p>
-                        <div class="cs-slider-row" style="margin-top:10px;">
-                            <span class="cs-slider-label">评论回复时间</span>
-                            <input type="range" min="5" max="120" step="5" value="30" class="font-size-slider" id="moment-reply-delay-slider">
-                            <span class="cs-slider-val" id="moment-reply-delay-value">30s</span>
-                        </div>
-                        <p class="cs-hint" style="margin-top:6px;">你评论 Ta 的朋友圈后，Ta 回复评论的等待时间</p>
                     </div>
 
                     <p class="cs-group-label" style="margin-top:4px;">通话功能</p>
@@ -1543,30 +1381,33 @@
                     <i class="fas fa-magic"></i>实用工具
                 </div>
                 <div class="settings-item-list">
-                    <div class="settings-item" id="stats-function">
-                        <i class="fas fa-chart-bar"></i><span>消息统计</span>
+                    <div class="settings-item" id="custom-replies-function">
+                        <i class="fas fa-comment-dots"></i><span>自定义回复</span>
                     </div>
                     <div class="settings-item" id="music-player-toggle">
                         <i class="fas fa-music"></i><span>悬浮音乐播放器</span>
                     </div>
-                    <div class="settings-item" id="fortune-lenormand-function" style="position:relative;">
-                        <i class="fas fa-star-and-crescent"></i><span>运势 · 占卜</span>
+                    <div class="settings-item" id="stats-function">
+                        <i class="fas fa-chart-bar"></i><span>消息统计</span>
                     </div>
                     <div class="settings-item" id="decision-function">
                         <i class="fas fa-comments"></i> 
                         <span>询问 · 抉择</span> 
                     </div>
-                    <div class="settings-item" id="period-function">
-                        <i class="fas fa-calendar-check"></i><span>经期记录</span>
+                    <div class="settings-item" id="fortune-lenormand-function" style="position:relative;">
+                        <i class="fas fa-star-and-crescent"></i><span>运势 · 占卜</span>
                     </div>
                     <div class="settings-item" id="anniversary-function">
                         <i class="fas fa-heart"></i><span>重要日</span>
                     </div>
-                    <div class="settings-item" id="diary-function">
-                        <i class="fas fa-book"></i><span>日记本</span>
+                    <div class="settings-item" id="mood-function">
+                        <i class="fas fa-calendar-day"></i><span>心晴手账</span>
                     </div>
-                    <div class="settings-item" id="memo-function">
-                        <i class="fas fa-list-check"></i><span>备忘录</span>
+                    <div class="settings-item" id="envelope-function">
+                        <i class="fas fa-envelope"></i><span>信封投递</span>
+                    </div>
+                    <div class="settings-item" id="period-function">
+                        <i class="fas fa-calendar-check"></i><span>经期记录</span>
                     </div>
                 </div>
             </div>
@@ -1915,10 +1756,6 @@
                     <i class="fas fa-comment-dots"></i>
                     <span>回复库</span>
                 </button>
-                <button class="sidebar-btn" data-major="slacking">
-                    <i class="fas fa-coffee"></i>
-                    <span>摸鱼管理</span>
-                </button>
                 <button class="sidebar-btn" data-major="atmosphere">
                     <i class="fas fa-magic"></i>
                     <span>氛围感</span>
@@ -2241,8 +2078,8 @@
                 <div class="ad-history-list" id="ad-history-list"></div>
             </div>
 
-            <div class="ad-tools-title" id="ad-tools-title">小工具</div>
-            <div class="decision-menu-grid ad-tools-grid" id="ad-tools-section">
+            <div class="ad-tools-title">小工具</div>
+            <div class="decision-menu-grid ad-tools-grid">
                 <div class="decision-option-card" id="open-coin-toss">
                     <i class="fas fa-coins"></i>
                     <h3>抛硬币</h3>
@@ -2262,26 +2099,31 @@
     </div>
 
     <div class="modal" id="moments-modal">
-        <div class="modal-content moments-page-content">
-            <div class="mp-navbar">
-                <button class="modal-btn modal-btn-secondary mp-back-btn" id="close-moments"><i class="fas fa-chevron-left"></i> 朋友圈</button>
-                <button class="moments-compose-toggle" id="moments-compose-toggle" title="发布动态">
-                    <i class="fas fa-camera"></i>
+        <div class="modal-content moments-modal-content">
+            <div class="moments-head">
+                <div class="modal-title">
+                    <i class="fas fa-stream"></i><span>动态</span>
+                </div>
+                <button class="moments-compose-toggle" id="moments-compose-toggle">
+                    <i class="fas fa-plus"></i> 发布
                 </button>
             </div>
-            <div class="mp-scroll">
-                <div class="mp-cover" id="mp-cover">
-                    <div class="mp-cover-bg" id="mp-cover-bg"></div>
-                    <div class="mp-cover-me">
-                        <span class="mp-cover-name" id="mp-cover-name">我</span>
-                        <div class="m-av mp-cover-av" id="moments-av-user"></div>
-                    </div>
-                    <div id="moments-av-partner" style="display:none;"></div>
+
+            <div class="moments-cover">
+                <div class="moments-avatars">
+                    <div class="m-av" id="moments-av-partner"></div>
+                    <div class="m-av" id="moments-av-user"></div>
                 </div>
-                <div class="mp-sigline" id="mp-sigline" title="点击编辑签名">
-                    <i class="fas fa-pen-to-square"></i>
-                    <span id="moments-signature-text">点击设置签名</span>
+                <div class="moments-anniv">
+                    <i class="fas fa-heart"></i>
+                    <span id="moments-anniv-text">已相遇 <em>–</em> 天</span>
+                    <input type="date" id="moments-meet-date" title="设置相遇纪念日">
                 </div>
+                <div class="moments-publisher" id="moments-publisher">
+                    <span class="mp-hint">分享此刻的心情…</span>
+                    <button class="mp-plus" id="moments-plus-btn" title="发布动态"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
 
             <div class="moments-composer" id="moments-composer">
                 <textarea id="moment-text-input" class="moments-textarea" rows="3" placeholder="分享此刻的心情…"></textarea>
@@ -2294,9 +2136,11 @@
                     <button class="modal-btn modal-btn-primary moments-publish-btn" id="moment-publish">发布</button>
                 </div>
             </div>
-            <div id="moments-publisher" style="display:none;"></div>
 
             <div class="moments-feed" id="moments-feed"></div>
+
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="close-moments">关闭</button>
             </div>
         </div>
     </div>
@@ -2318,19 +2162,6 @@
                 </div>
                 <label class="period-switch"><input type="checkbox" id="period-enabled"><span class="ps-slider"></span></label>
             </div>
-            <div class="pcal-nav">
-                <button class="pcal-nav-btn" id="period-cal-prev"><i class="fas fa-chevron-left"></i></button>
-                <span class="pcal-nav-title" id="period-cal-title">—</span>
-                <button class="pcal-nav-btn" id="period-cal-next"><i class="fas fa-chevron-right"></i></button>
-            </div>
-            <div class="pcal-weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
-            <div class="pcal-grid" id="period-calendar-grid"></div>
-            <div class="pcal-legend">
-                <span><i class="pcal-dot pcal-dot-period"></i>经期</span>
-                <span><i class="pcal-dot pcal-dot-start"></i>开始日</span>
-                <span><i class="pcal-dot pcal-dot-predict"></i>推测</span>
-                <span><i class="pcal-dot pcal-dot-today"></i>今天</span>
-            </div>
             <div class="period-actions">
                 <button class="modal-btn modal-btn-primary" id="period-mark-start"><i class="fas fa-play"></i> 标注经期开始（今天）</button>
                 <button class="modal-btn modal-btn-secondary" id="period-mark-end"><i class="fas fa-stop"></i> 标注本次结束（今天）</button>
@@ -2348,79 +2179,6 @@
             </div>
         </div>
     </div>
-    <div class="modal" id="diary-modal">
-        <div class="modal-content">
-            <div class="modal-title">
-                <i class="fas fa-book"></i><span>日记本</span>
-            </div>
-            <div class="diary-editor">
-                <div class="diary-editor-head">
-                    <span class="diary-date" id="diary-date-label">—</span>
-                    <div class="diary-pickers">
-                        <div class="diary-picker" id="diary-mood-picker">
-                            <span class="dp-value" id="diary-mood-value">🙂</span>
-                            <span class="dp-label">心情</span>
-                            <div class="dp-pop" id="diary-mood-pop"></div>
-                        </div>
-                        <div class="diary-picker" id="diary-weather-picker">
-                            <span class="dp-value" id="diary-weather-value">☀️</span>
-                            <span class="dp-label">天气</span>
-                            <div class="dp-pop" id="diary-weather-pop"></div>
-                        </div>
-                        <input type="date" id="diary-date-input" title="选择日期">
-                    </div>
-                </div>
-                <textarea class="diary-textarea" id="diary-text-input" rows="5" placeholder="今天想写点什么…"></textarea>
-                <button class="modal-btn modal-btn-primary" id="diary-save-btn" style="width:100%;"><i class="fas fa-floppy-disk"></i> 保存今天的日记</button>
-            </div>
-            <div class="ad-history diary-history">
-                <div class="ad-history-head">
-                    <span><i class="fas fa-clock-rotate-left"></i>往期日记 <em id="diary-count">0</em></span>
-                    <button class="ad-history-clear" id="diary-clear">清空</button>
-                </div>
-                <div class="ad-history-list diary-list" id="diary-list"></div>
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-secondary" id="close-diary">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="memo-modal">
-        <div class="modal-content">
-            <div class="modal-title">
-                <i class="fas fa-list-check"></i><span>备忘录</span>
-            </div>
-            <p class="ad-subtitle">记下待办事项，Ta 会在聊天里适时提醒你。</p>
-            <div class="memo-add-row">
-                <input type="text" id="memo-text-input" class="memo-text-input" placeholder="要做什么事？例如：记得多喝水" maxlength="60">
-                <input type="date" id="memo-date-input" title="截止日期（可选）">
-                <button class="modal-btn modal-btn-primary memo-add-btn" id="memo-add-btn"><i class="fas fa-plus"></i></button>
-            </div>
-            <div class="memo-list" id="memo-list"></div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-secondary" id="close-memo">关闭</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal" id="profiles-modal">
-        <div class="modal-content">
-            <div class="modal-title">
-                <i class="fas fa-user-group"></i><span>对象管理</span>
-            </div>
-            <p class="ad-subtitle">可以为不同的对象分别建立档案，切换后聊天、动态、设置等数据随之切换。</p>
-            <div class="profiles-list" id="profiles-list"></div>
-            <div class="profile-add-row">
-                <input type="text" id="profile-name-input" class="memo-text-input" placeholder="新对象的称呼" maxlength="16">
-                <button class="modal-btn modal-btn-primary memo-add-btn" id="profile-add-btn"><i class="fas fa-plus"></i></button>
-            </div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-secondary" id="close-profiles">关闭</button>
-            </div>
-        </div>
-    </div>
-
     <div class="modal" id="wheel-modal">
         <div class="modal-content">
             <div class="modal-title">
@@ -2595,13 +2353,6 @@
     <script src="js/features/decision-ask.js"></script>
     <script src="js/features/period.js"></script>
     <script src="js/features/link-status.js"></script>
-    <script src="js/features/home.js"></script>
-    <script src="js/features/diary.js"></script>
-    <script src="js/features/memo.js"></script>
-    <script src="js/features/redpacket.js"></script>
-    <script src="js/features/profiles.js"></script>
-    <script src="js/features/slacking.js"></script>
-    <script src="js/features/chat-header.js"></script>
 
     <!-- == 合并模块 == -->
     <script src="js/games.js"></script> 
