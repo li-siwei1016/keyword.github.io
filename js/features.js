@@ -1569,6 +1569,15 @@ window.closeDailyGreeting = function() {
             }, 320);
         }
         localStorage.setItem('dailyGreetingShown', new Date().toDateString());
+        // 公告结束后直接进入主页（已看过新手引导时），避免短暂停留在聊天界面
+        try {
+            var goHome = function() { if (typeof window.showHomePage === 'function') window.showHomePage(); };
+            if (window.localforage && window.APP_PREFIX) {
+                localforage.getItem(window.APP_PREFIX + 'tour_seen').then(function(seen) {
+                    if (seen) setTimeout(goHome, 60);
+                }).catch(function() {});
+            }
+        } catch(e2) {}
     } catch(e) {}
 };
 

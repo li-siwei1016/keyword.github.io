@@ -1,6 +1,6 @@
 /**
  * slacking.js - 摸鱼状态
- * · 字卡库「摸鱼管理」：维护摸鱼字卡（地点 / 活动两个分支），可批量导入
+ * · 字卡库「回复库管理 → 摸鱼·地点 / 摸鱼·活动」：维护摸鱼字卡，支持批量导入、去重与分组
  * · 对方随机进入摸鱼状态，输出格式：「{对方} 在 {地点} {活动}」
  * · 主页「Ta 的手机」框实时显示摸鱼状态；「摸鱼小记」记录往日摸鱼
  */
@@ -9,6 +9,9 @@ var slackingPlaces = [];
 var slackingActs = [];
 var slackingLog = [];        // [{ time, place, act, text, mins }]
 var slackingState = { active: false, place: '', act: '', start: 0, end: 0 };
+/* 摸鱼字卡分组（结构与主字卡分组一致：[{ id, name, color, items, disabled }]） */
+if (typeof window.slackingPlaceGroups === 'undefined') window.slackingPlaceGroups = [];
+if (typeof window.slackingActGroups === 'undefined') window.slackingActGroups = [];
 
 (function () {
     const SLACK_TICK = 60 * 1000;     // 每分钟判定一次
@@ -30,17 +33,21 @@ var slackingState = { active: false, place: '', act: '', start: 0, end: 0 };
             return;
         }
         try {
-            const [p, a, log, st] = await Promise.all([
+            const [p, a, log, st, pg, ag] = await Promise.all([
                 localforage.getItem(getStorageKey('slackingPlaces')),
                 localforage.getItem(getStorageKey('slackingActs')),
                 localforage.getItem(getStorageKey('slackingLog')),
-                localforage.getItem(getStorageKey('slackingState'))
+                localforage.getItem(getStorageKey('slackingState')),
+                localforage.getItem(getStorageKey('slackingPlaceGroups')),
+                localforage.getItem(getStorageKey('slackingActGroups'))
             ]);
             slackingPlaces = Array.isArray(p) ? p : [];
             slackingActs = Array.isArray(a) ? a : [];
             slackingLog = Array.isArray(log) ? log : [];
             slackingState = (st && typeof st === 'object') ? st : { active: false, place: '', act: '', start: 0, end: 0 };
-            // 首次使用给一套默认字卡，用户可在摸鱼管理中增删
+            window.slackingPlaceGroups = Array.isArray(pg) ? pg : [];
+            window.slackingActGroups = Array.isArray(ag) ? ag : [];
+            // 首次使用给一套默认字卡，用户可在字卡库中增删
             if (!p && !a) {
                 slackingPlaces = DEFAULT_PLACES.slice();
                 slackingActs = DEFAULT_ACTS.slice();
@@ -56,6 +63,8 @@ var slackingState = { active: false, place: '', act: '', start: 0, end: 0 };
             if (typeof SESSION_ID === 'undefined' || !SESSION_ID) return;
             localforage.setItem(getStorageKey('slackingPlaces'), slackingPlaces);
             localforage.setItem(getStorageKey('slackingActs'), slackingActs);
+            localforage.setItem(getStorageKey('slackingPlaceGroups'), window.slackingPlaceGroups || []);
+            localforage.setItem(getStorageKey('slackingActGroups'), window.slackingActGroups || []);
         } catch (e) {}
     }
     function saveLog() {

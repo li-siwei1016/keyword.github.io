@@ -537,3 +537,11 @@ async function importAllData(file) {
         showNotification('导入失败：' + msg, 'error', 5000);
     }
 }
+
+/* 等待 SESSION_ID 初始化后再执行（模块在会话建立前启动时会用到） */
+window.__waitSession = function (fn, tries) {
+    tries = tries || 0;
+    if (typeof SESSION_ID !== 'undefined' && SESSION_ID) { try { fn(); } catch (e) { console.warn(e); } return; }
+    if (tries > 80) return;
+    setTimeout(function () { window.__waitSession(fn, tries + 1); }, 500);
+};

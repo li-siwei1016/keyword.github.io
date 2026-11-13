@@ -255,7 +255,7 @@
                     ${slackTxt ? `<div class="pv-row"><span class="pv-k">摸鱼状态</span><span class="pv-v pv-slacking">${esc(slackTxt)}</span></div>` : ''}
                 </div>
                 <button class="pv-btn" id="pv-status-refresh"><i class="fas fa-rotate"></i> 换一条状态</button>
-                <div class="pv-hint">状态抓取自「字卡库 → 氛围感 → 对方状态」中的状态字卡</div>`;
+                <div class="pv-hint">状态抓取自「字卡库 → 回复库管理 → 状态字卡」中的状态字卡</div>`;
             const btn = body.querySelector('#pv-status-refresh');
             if (btn) btn.addEventListener('click', () => {
                 if (typeof window._triggerStatusChange === 'function') window._triggerStatusChange();

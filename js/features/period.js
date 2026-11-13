@@ -54,6 +54,10 @@ function fmtMD(iso) {
 
 /* ---------------- 存取 ---------------- */
 async function loadPeriodData() {
+    if (typeof SESSION_ID === 'undefined' || !SESSION_ID) {
+        if (typeof window.__waitSession === 'function') window.__waitSession(loadPeriodData);
+        return;
+    }
     try {
         const saved = await localforage.getItem(getStorageKey('period'));
         if (saved && typeof saved === 'object') {
@@ -224,7 +228,90 @@ function renderPeriodPanel() {
     if (toggle) toggle.checked = !!periodData.enabled;
     renderPeriodPredict();
     renderPeriodList();
+    renderPeriodCalendar();
     updatePeriodBanner(false);
+}
+
+/* ---------------- 日历视图 ---------------- */
+let periodCalMonth = null; // 'YYYY-MM'
+
+function periodRangeSet(pred) {
+    // 汇总所有需要标注的日期段 {start,end,kind}
+    const ranges = [];
+    periodData.records.forEach(r => {
+        if (r.end) ranges.push({ start: r.start, end: r.end, kind: 'recorded' });
+        else ranges.push({ start: r.start, end: r.start, kind: 'recorded' });
+    });
+    const p = pred;
+    if (p) {
+        const lastRec = periodData.records.find(r => r.start === p.lastStart);
+        if (lastRec && !lastRec.end && todayISO() <= p.thisEnd) {
+            ranges.push({ start: p.lastStart, end: p.thisEnd, kind: 'predict-current' });
+        }
+        ranges.push({ start: p.nextStart, end: p.nextEnd, kind: 'predict-next' });
+    }
+    return ranges;
+}
+
+function renderPeriodCalendar() {
+    const grid = document.getElementById('period-calendar-grid');
+    const titleEl = document.getElementById('period-cal-title');
+    if (!grid) return;
+
+    const now = new Date();
+    if (!periodCalMonth) periodCalMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const [yStr, mStr] = periodCalMonth.split('-');
+    const y = Number(yStr), m = Number(mStr);
+    if (titleEl) titleEl.textContent = `${y} 年 ${m} 月`;
+
+    const pred = predictPeriod();
+    const ranges = periodData.enabled ? periodRangeSet(pred) : [];
+    const today = todayISO();
+
+    const firstDay = new Date(y, m - 1, 1);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const startWeek = firstDay.getDay();
+
+    // 生成 date->kind 标注表
+    const marks = {};
+    ranges.forEach(r => {
+        let cur = r.start;
+        let guard = 0;
+        while (cur <= r.end && guard++ < 120) {
+            if (cur.startsWith(periodCalMonth)) {
+                marks[cur] = marks[cur] || { recorded: false, predict: false, isStart: false };
+                if (r.kind === 'recorded') marks[cur].recorded = true;
+                else marks[cur].predict = true;
+                if (cur === r.start) marks[cur].isStart = true;
+            }
+            const d = new Date(cur + 'T00:00:00');
+            d.setDate(d.getDate() + 1);
+            cur = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+    });
+
+    let html = '';
+    for (let i = 0; i < startWeek; i++) html += '<span class="pcal-cell empty"></span>';
+    for (let d = 1; d <= daysInMonth; d++) {
+        const iso = `${periodCalMonth}-${String(d).padStart(2, '0')}`;
+        const mk = marks[iso];
+        let cls = 'pcal-cell';
+        if (mk) {
+            if (mk.recorded) cls += ' pcal-recorded';
+            else if (mk.predict) cls += ' pcal-predict';
+            if (mk.isStart) cls += ' pcal-start';
+        }
+        if (iso === today) cls += ' pcal-today';
+        html += `<span class="${cls}"><em>${d}</em></span>`;
+    }
+    grid.innerHTML = html;
+}
+
+function shiftPeriodMonth(delta) {
+    const [yStr, mStr] = (periodCalMonth || todayISO().slice(0, 7)).split('-').map(Number);
+    const d = new Date(yStr, mStr - 1 + delta, 1);
+    periodCalMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    renderPeriodCalendar();
 }
 
 async function openPeriodPanel() {
@@ -251,6 +338,7 @@ function markPeriodStart() {
     if (periodData.records.length > 36) periodData.records = periodData.records.slice(-36);
     savePeriodData();
     renderPeriodPredict();
+    renderPeriodCalendar();
     renderPeriodList();
     showNotification('已记录经期开始', 'success');
 
@@ -277,6 +365,7 @@ function markPeriodEnd() {
             r.end = today;
             savePeriodData();
             renderPeriodPredict();
+            renderPeriodCalendar();
             renderPeriodList();
             showNotification('已记录经期结束', 'success');
             return;
@@ -306,6 +395,8 @@ function initPeriodModule() {
             periodData.enabled = toggle.checked;
             savePeriodData();
             updatePeriodBanner(false);
+            renderPeriodCalendar();
+            renderPeriodPredict();
             if (toggle.checked) {
                 showNotification('经期记录已启用', 'success');
                 checkPeriodReminders();
@@ -323,6 +414,17 @@ function initPeriodModule() {
     if (endBtn && !endBtn.dataset.periodBound) {
         endBtn.dataset.periodBound = '1';
         endBtn.addEventListener('click', markPeriodEnd);
+    }
+
+    const prevBtn = document.getElementById('period-cal-prev');
+    if (prevBtn && !prevBtn.dataset.periodBound) {
+        prevBtn.dataset.periodBound = '1';
+        prevBtn.addEventListener('click', () => shiftPeriodMonth(-1));
+    }
+    const nextBtn = document.getElementById('period-cal-next');
+    if (nextBtn && !nextBtn.dataset.periodBound) {
+        nextBtn.dataset.periodBound = '1';
+        nextBtn.addEventListener('click', () => shiftPeriodMonth(1));
     }
 
     const clearBtn = document.getElementById('period-clear');

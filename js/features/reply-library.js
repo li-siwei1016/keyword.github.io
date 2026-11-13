@@ -14,6 +14,14 @@ function _getGroupCtx(tab) {
         if (!window.customStatusGroups) window.customStatusGroups = [];
         return { groups: window.customStatusGroups, items: customStatuses, itemLabel: '状态' };
     }
+    if (tab === 'slkPlaces') {
+        if (!window.slackingPlaceGroups) window.slackingPlaceGroups = [];
+        return { groups: window.slackingPlaceGroups, items: (typeof slackingPlaces !== 'undefined' ? slackingPlaces : []), itemLabel: '地点' };
+    }
+    if (tab === 'slkActs') {
+        if (!window.slackingActGroups) window.slackingActGroups = [];
+        return { groups: window.slackingActGroups, items: (typeof slackingActs !== 'undefined' ? slackingActs : []), itemLabel: '活动' };
+    }
     // default: custom replies
     if (!window.customReplyGroups) window.customReplyGroups = [];
     return { groups: window.customReplyGroups, items: customReplies, itemLabel: '字卡' };
@@ -22,7 +30,7 @@ function _getGroupCtx(tab) {
 // 判断当前 tab 是否支持分组
 function _tabHasGroups(tab) {
     tab = tab || currentSubTab;
-    return tab === 'custom' || tab === 'pokes' || tab === 'statuses';
+    return tab === 'custom' || tab === 'pokes' || tab === 'statuses' || tab === 'slkPlaces' || tab === 'slkActs';
 }
 
 let _batchSelectedIndices = new Set();
@@ -138,21 +146,26 @@ function _renderListContentOnly() {
     let itemsToRender = [];
     let renderType = 'text';
 
-    if (currentMajorTab === 'reply') {
-        if (currentSubTab === 'custom') {
-            itemsToRender = customReplies;
-        } else if (currentSubTab === 'emojis') {
-            itemsToRender = CONSTANTS.REPLY_EMOJIS;
-            renderType = 'emoji';
-        } else if (currentSubTab === 'stickers') {
-            itemsToRender = stickerLibrary;
-            renderType = 'image';
-        }
-    } else if (currentMajorTab === 'atmosphere') {
-        if (currentSubTab === 'pokes') itemsToRender = customPokes;
-        else if (currentSubTab === 'statuses') itemsToRender = customStatuses;
-        else if (currentSubTab === 'mottos') itemsToRender = customMottos;
-        else if (currentSubTab === 'intros') itemsToRender = customIntros;
+    if (currentSubTab === 'custom') {
+        itemsToRender = customReplies;
+    } else if (currentSubTab === 'emojis') {
+        itemsToRender = CONSTANTS.REPLY_EMOJIS;
+        renderType = 'emoji';
+    } else if (currentSubTab === 'stickers') {
+        itemsToRender = stickerLibrary;
+        renderType = 'image';
+    } else if (currentSubTab === 'statuses') {
+        itemsToRender = customStatuses;
+    } else if (currentSubTab === 'slkPlaces') {
+        itemsToRender = (typeof slackingPlaces !== 'undefined' ? slackingPlaces : []);
+    } else if (currentSubTab === 'slkActs') {
+        itemsToRender = (typeof slackingActs !== 'undefined' ? slackingActs : []);
+    } else if (currentSubTab === 'pokes') {
+        itemsToRender = customPokes;
+    } else if (currentSubTab === 'mottos') {
+        itemsToRender = customMottos;
+    } else if (currentSubTab === 'intros') {
+        itemsToRender = customIntros;
     }
 
     if (renderType === 'emoji') { _renderEmojiTab(list, itemsToRender); return; }
@@ -168,7 +181,7 @@ function _renderListContentOnly() {
         return;
     }
 
-    if (currentMajorTab === 'reply' && currentSubTab === 'custom') {
+    if (_tabHasGroups()) {
         _renderCardViewWithGroups(list, filtered);
     } else {
         _renderAtmosphereList(list, filtered);
@@ -226,21 +239,26 @@ function renderReplyLibrary() {
     let itemsToRender = [];
     let renderType = 'text';
 
-    if (currentMajorTab === 'reply') {
-        if (currentSubTab === 'custom') {
-            itemsToRender = customReplies;
-        } else if (currentSubTab === 'emojis') {
-            itemsToRender = CONSTANTS.REPLY_EMOJIS;
-            renderType = 'emoji';
-        } else if (currentSubTab === 'stickers') {
-            itemsToRender = stickerLibrary;
-            renderType = 'image';
-        }
-    } else if (currentMajorTab === 'atmosphere') {
-        if (currentSubTab === 'pokes') itemsToRender = customPokes;
-        else if (currentSubTab === 'statuses') itemsToRender = customStatuses;
-        else if (currentSubTab === 'mottos') itemsToRender = customMottos;
-        else if (currentSubTab === 'intros') itemsToRender = customIntros;
+    if (currentSubTab === 'custom') {
+        itemsToRender = customReplies;
+    } else if (currentSubTab === 'emojis') {
+        itemsToRender = CONSTANTS.REPLY_EMOJIS;
+        renderType = 'emoji';
+    } else if (currentSubTab === 'stickers') {
+        itemsToRender = stickerLibrary;
+        renderType = 'image';
+    } else if (currentSubTab === 'statuses') {
+        itemsToRender = customStatuses;
+    } else if (currentSubTab === 'slkPlaces') {
+        itemsToRender = (typeof slackingPlaces !== 'undefined' ? slackingPlaces : []);
+    } else if (currentSubTab === 'slkActs') {
+        itemsToRender = (typeof slackingActs !== 'undefined' ? slackingActs : []);
+    } else if (currentSubTab === 'pokes') {
+        itemsToRender = customPokes;
+    } else if (currentSubTab === 'mottos') {
+        itemsToRender = customMottos;
+    } else if (currentSubTab === 'intros') {
+        itemsToRender = customIntros;
     }
 
     if (renderType === 'emoji') { _renderEmojiTab(list, itemsToRender); return; }
@@ -970,6 +988,17 @@ function _runDedup() {
     const preEmoji = customEmojis.length;
     customEmojis = [...new Set(customEmojis)];
     totalRemoved += (preEmoji - customEmojis.length);
+    // 摸鱼地点 / 活动字卡去重（与主字卡一致：删除重复词条）
+    let slkSaved = false;
+    if (typeof slackingPlaces !== 'undefined') {
+        const sp = deduplicateContentArray(slackingPlaces);
+        if (sp.removedCount > 0) { slackingPlaces = sp.result; totalRemoved += sp.removedCount; slkSaved = true; }
+    }
+    if (typeof slackingActs !== 'undefined') {
+        const sa = deduplicateContentArray(slackingActs);
+        if (sa.removedCount > 0) { slackingActs = sa.result; totalRemoved += sa.removedCount; slkSaved = true; }
+    }
+    if (slkSaved && typeof window.slackingSavePools === 'function') window.slackingSavePools();
     if (totalRemoved > 0) {
         throttledSaveData(); renderReplyLibrary();
         showNotification(`🧹 共清理了 ${totalRemoved} 条重复内容`, 'success');
@@ -1348,6 +1377,8 @@ function deleteItem(index) {
     else if (currentSubTab === 'statuses') customStatuses.splice(index, 1);
     else if (currentSubTab === 'mottos') customMottos.splice(index, 1);
     else if (currentSubTab === 'intros') customIntros.splice(index, 1);
+    else if (currentSubTab === 'slkPlaces') { slackingPlaces.splice(index, 1); if (window.slackingSavePools) window.slackingSavePools(); }
+    else if (currentSubTab === 'slkActs') { slackingActs.splice(index, 1); if (window.slackingSavePools) window.slackingSavePools(); }
     if (item && ctx.groups) {
         ctx.groups.forEach(g => { if (g.items) g.items = g.items.filter(t => t !== item); });
     }
@@ -1381,6 +1412,8 @@ function editItem(index, oldText) {
     else if (currentSubTab === 'statuses') customStatuses[index] = newText.trim();
     else if (currentSubTab === 'mottos') customMottos[index] = newText.trim();
     else if (currentSubTab === 'intros') customIntros[index] = newText.trim();
+    else if (currentSubTab === 'slkPlaces') { slackingPlaces[index] = newText.trim(); if (window.slackingSavePools) window.slackingSavePools(); }
+    else if (currentSubTab === 'slkActs') { slackingActs[index] = newText.trim(); if (window.slackingSavePools) window.slackingSavePools(); }
     throttledSaveData();
     renderReplyLibrary();
 }
@@ -1426,8 +1459,8 @@ function _showExportUI() {
     const anyGroupExists    = replyGroupsExist || pokeGroupsExist || statusGroupsExist || onAnnTab;
 
     // 根据当前 tab 决定「按分组导出」对应哪个类型
-    const onPokeTab   = currentMajorTab === 'atmosphere' && currentSubTab === 'pokes';
-    const onStatusTab = currentMajorTab === 'atmosphere' && currentSubTab === 'statuses';
+    const onPokeTab   = currentSubTab === 'pokes';
+    const onStatusTab = currentSubTab === 'statuses';
     let groupExportType = null;
     if (onAnnTab)                          groupExportType = 'announcement';
     if (onPokeTab   && pokeGroupsExist)    groupExportType = 'pokes';
@@ -2146,11 +2179,17 @@ function _showBatchAddDialog() {
                 ? customPokes.some(r => normalizeStringStrict(r) === norm)
                 : currentSubTab === 'statuses'
                 ? customStatuses.some(r => normalizeStringStrict(r) === norm)
+                : currentSubTab === 'slkPlaces'
+                ? (typeof slackingPlaces !== 'undefined' && slackingPlaces.some(r => normalizeStringStrict(r) === norm))
+                : currentSubTab === 'slkActs'
+                ? (typeof slackingActs !== 'undefined' && slackingActs.some(r => normalizeStringStrict(r) === norm))
                 : false;
             if (isDup) { skipped++; return; }
             if (currentSubTab === 'custom') { customReplies.push(val); newItems.push(val); }
             else if (currentSubTab === 'pokes') { customPokes.push(val); newItems.push(val); }
             else if (currentSubTab === 'statuses') { customStatuses.push(val); newItems.push(val); }
+            else if (currentSubTab === 'slkPlaces') { slackingPlaces.push(val); newItems.push(val); }
+            else if (currentSubTab === 'slkActs') { slackingActs.push(val); newItems.push(val); }
             else if (currentSubTab === 'mottos') customMottos.push(val);
             added++;
         });
@@ -2164,6 +2203,9 @@ function _showBatchAddDialog() {
             }
         }
         throttledSaveData();
+        if ((currentSubTab === 'slkPlaces' || currentSubTab === 'slkActs') && typeof window.slackingSavePools === 'function') {
+            window.slackingSavePools();
+        }
         overlay.remove();
         renderReplyLibrary();
         const groupHint = _selectedGroupIdx >= 0 && groups?.[_selectedGroupIdx]
@@ -2298,7 +2340,8 @@ function initReplyLibraryListeners() {
                 }
                 return;
             }
-            if (currentSubTab === 'custom' || currentSubTab === 'pokes' || currentSubTab === 'statuses') {
+            if (currentSubTab === 'custom' || currentSubTab === 'pokes' || currentSubTab === 'statuses'
+                || currentSubTab === 'slkPlaces' || currentSubTab === 'slkActs') {
                 _showBatchAddDialog(); return;
             }
             let input;
@@ -2331,7 +2374,7 @@ function initReplyLibraryListeners() {
 }
 
 function getCategoryName(tabId) {
-    return { custom: '回复', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语' }[tabId] || '内容';
+    return { custom: '回复', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语', slkPlaces: '摸鱼地点', slkActs: '摸鱼活动' }[tabId] || '内容';
 }
 
 function updateTabUI() {
