@@ -220,10 +220,11 @@
                     <div class="home-clock-time" id="home-clock-time">—</div>
                     <div class="home-clock-greet" id="home-clock-greet">—</div>
                 </div>
-                <div class="home-card home-status-card" id="home-status-mood" title="查看心晴手账">
-                    <div class="hsc-label"><i class="fas fa-heart-pulse"></i> Ta 的状态</div>
+                <div class="home-card home-status-card" id="home-status-mood" title="查看 Ta 的手机">
+                    <div class="hsc-label"><i class="fas fa-mobile-screen"></i> Ta 的手机</div>
                     <div class="hsc-mood" id="home-status-mood-text">还没有记录</div>
-                    <div class="hsc-weather" id="home-status-weather-text">点击查看心晴手账</div>
+                    <div class="hsc-status" id="home-status-status-text">状态：—</div>
+                    <div class="hsc-slacking" id="home-status-slacking-text" style="display:none;"></div>
                 </div>
                 <div class="home-card home-anniv-card" id="home-anniv-card" title="查看所有纪念日">
                     <div class="hac-label"><i class="fas fa-heart"></i> 相遇纪念日</div>
@@ -234,7 +235,7 @@
 
             <!-- 第三行：聊天 / 朋友圈 / 信件 -->
             <div class="home-row home-row3">
-                <div class="home-tile" id="home-tile-chat"><i class="fas fa-comments"></i><span>聊天</span></div>
+                <div class="home-tile" id="home-tile-chat"><i class="fas fa-comments"></i><span>聊天</span><span class="moments-unread-dot" id="chat-unread-dot" style="display:none;"></span></div>
                 <div class="home-tile" id="home-tile-moments"><i class="fas fa-camera-retro"></i><span>朋友圈</span><span class="moments-unread-dot" id="moments-unread-dot" style="display:none;"></span></div>
                 <div class="home-tile" id="home-tile-letter"><i class="fas fa-envelope"></i><span>信件</span></div>
             </div>
@@ -257,6 +258,29 @@
     </div>
 
     <!-- 隐藏入口桩：保留既有 JS 绑定，供主页磁贴触发 -->
+    <!-- Ta 的手机 -->
+    <div class="modal" id="phone-modal">
+        <div class="modal-content phone-modal-content">
+            <div class="phone-header">
+                <div class="phone-title"><i class="fas fa-mobile-screen"></i> Ta 的手机</div>
+                <button class="modal-btn modal-btn-secondary phone-close-btn" id="close-phone-modal">关闭</button>
+            </div>
+            <div class="phone-body">
+                <div class="phone-menu" id="phone-menu">
+                    <div class="phone-menu-item" data-phone="status"><i class="fas fa-heart-pulse"></i><div class="pmi-text"><b>Ta 的状态</b><span>当前状态与心情（含摸鱼状态）</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
+                    <div class="phone-menu-item" data-phone="moments"><i class="fas fa-camera-retro"></i><div class="pmi-text"><b>Ta 的朋友圈</b><span>对方自主发布的动态</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
+                    <div class="phone-menu-item" data-phone="letters"><i class="fas fa-envelope-open-text"></i><div class="pmi-text"><b>Ta 的信笺</b><span>对方自主投递的信封</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
+                    <div class="phone-menu-item" data-phone="mood"><i class="fas fa-book-open"></i><div class="pmi-text"><b>心情手账</b><span>每天的心情与天气</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
+                    <div class="phone-menu-item" data-phone="slacking"><i class="fas fa-coffee"></i><div class="pmi-text"><b>摸鱼小记</b><span>往日的摸鱼状态记录</span></div><i class="fas fa-chevron-right pmi-arrow"></i></div>
+                </div>
+                <div class="phone-view" id="phone-view" style="display:none;">
+                    <button class="phone-back" id="phone-view-back"><i class="fas fa-chevron-left"></i> 返回</button>
+                    <div class="phone-view-body" id="phone-view-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="home-entry-stubs" style="display:none;">
         <div id="custom-replies-function"></div>
         <div id="mood-function"></div>
@@ -281,11 +305,11 @@
                 </div>
             </div>
             <div class="header-actions">
-                <button id="home-top-btn" class="action-btn" title="主页"><i class="fas fa-house"></i></button>
                 <button id="session-manager-btn" class="action-btn" title="会话管理"><i class="fas fa-comments"></i></button>
                 <button id="group-chat-btn" class="action-btn" title="群聊设置"><i class="fas fa-users"></i></button>
                 <button id="daily-greeting-btn" class="action-btn" title="今日公告" onclick="reopenDailyGreeting()"><i class="fas fa-newspaper"></i></button>
                 <button id="theme-toggle" class="action-btn" title="切换主题"><i class="fas fa-moon"></i></button>
+                <button id="home-top-btn" class="action-btn" title="主页"><i class="fas fa-house"></i></button>
             </div>
              <div class="user-info">
                 <div class="username" id="my-name">
@@ -1310,6 +1334,12 @@
                             <span class="cs-slider-val" id="moment-chance-value">30%</span>
                         </div>
                         <p class="cs-hint" style="margin-top:6px;">概率越高，Ta 越常在「动态」里发布内容</p>
+                        <div class="cs-slider-row" style="margin-top:10px;">
+                            <span class="cs-slider-label">评论回复时间</span>
+                            <input type="range" min="5" max="120" step="5" value="30" class="font-size-slider" id="moment-reply-delay-slider">
+                            <span class="cs-slider-val" id="moment-reply-delay-value">30s</span>
+                        </div>
+                        <p class="cs-hint" style="margin-top:6px;">你评论 Ta 的朋友圈后，Ta 回复评论的等待时间</p>
                     </div>
 
                     <p class="cs-group-label" style="margin-top:4px;">通话功能</p>
@@ -1885,6 +1915,10 @@
                     <i class="fas fa-comment-dots"></i>
                     <span>回复库</span>
                 </button>
+                <button class="sidebar-btn" data-major="slacking">
+                    <i class="fas fa-coffee"></i>
+                    <span>摸鱼管理</span>
+                </button>
                 <button class="sidebar-btn" data-major="atmosphere">
                     <i class="fas fa-magic"></i>
                     <span>氛围感</span>
@@ -2244,10 +2278,9 @@
                     </div>
                     <div id="moments-av-partner" style="display:none;"></div>
                 </div>
-                <div class="mp-meetline">
-                    <i class="fas fa-heart"></i>
-                    <span id="moments-anniv-text">已相遇 <em>–</em> 天</span>
-                    <input type="date" id="moments-meet-date" title="设置相遇纪念日">
+                <div class="mp-sigline" id="mp-sigline" title="点击编辑签名">
+                    <i class="fas fa-pen-to-square"></i>
+                    <span id="moments-signature-text">点击设置签名</span>
                 </div>
 
             <div class="moments-composer" id="moments-composer">
@@ -2567,6 +2600,8 @@
     <script src="js/features/memo.js"></script>
     <script src="js/features/redpacket.js"></script>
     <script src="js/features/profiles.js"></script>
+    <script src="js/features/slacking.js"></script>
+    <script src="js/features/chat-header.js"></script>
 
     <!-- == 合并模块 == -->
     <script src="js/games.js"></script> 

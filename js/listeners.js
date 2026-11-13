@@ -1159,6 +1159,22 @@ if (_chatSettingsEl) _chatSettingsEl.addEventListener('click', () => {
                 });
             }
 
+            // 朋友圈：对方回复评论的等待时间（默认 30s）
+            const momentReplySlider = document.getElementById('moment-reply-delay-slider');
+            const momentReplyValue = document.getElementById('moment-reply-delay-value');
+            if (momentReplySlider) {
+                const initSec = Math.min(120, Math.max(5, Number(settings.momentReplyDelay) || 30));
+                momentReplySlider.value = initSec;
+                if (momentReplyValue) momentReplyValue.textContent = initSec + 's';
+                momentReplySlider.addEventListener('input', (e) => {
+                    if (momentReplyValue) momentReplyValue.textContent = e.target.value + 's';
+                });
+                momentReplySlider.addEventListener('change', (e) => {
+                    settings.momentReplyDelay = parseInt(e.target.value, 10);
+                    throttledSaveData();
+                });
+            }
+
             const settingToggles = {
                 '#reply-toggle': {
                     prop: 'replyEnabled', name: '引用回复'

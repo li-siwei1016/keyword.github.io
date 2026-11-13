@@ -189,6 +189,7 @@ autoSendInterval: 5,
         bottomCollapseMode: false,
         emojiMixEnabled: true,
         redpacketChance: 10,
+        momentReplyDelay: 30,
         homeTheme: { accent: '', frame: '#ffffff', bg: '' }
             };
         }
@@ -464,6 +465,13 @@ const LIBRARY_CONFIG = {
             { id: 'custom', name: '主字卡', mode: 'list' },
             { id: 'emojis', name: 'Emoji', mode: 'grid' },
             { id: 'stickers', name: '表情库', mode: 'grid' }
+        ]
+    },
+    slacking: {
+        title: "摸鱼管理",
+        tabs: [
+            { id: 'slkPlaces', name: '地点', mode: 'list' },
+            { id: 'slkActs', name: '活动', mode: 'list' }
         ]
     },
     atmosphere: {
@@ -992,29 +1000,53 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         rpWrap.className = `message-wrapper ${msg.sender === 'user' ? 'sent' : 'received'}`;
         rpWrap.dataset.id = msg.id;
         rpWrap.dataset.msgId = msg.id;
+
+        // 头像：与普通消息一致（双方发出时都带头像）
+        const rpAvatar = document.createElement('div');
+        rpAvatar.className = 'message-avatar';
+        if (settings.inChatAvatarEnabled) {
+            const isUser = msg.sender === 'user';
+            const avatarElement = isUser ? DOMElements.me.avatar : DOMElements.partner.avatar;
+            const avatarShape = isUser ? (settings.myAvatarShape || 'circle') : (settings.partnerAvatarShape || 'circle');
+            rpAvatar.innerHTML = avatarElement.innerHTML;
+            applyAvatarFrame(rpAvatar, isUser ? settings.myAvatarFrame : settings.partnerAvatarFrame);
+            ['circle', 'square', 'pentagon', 'heart'].forEach(s => rpAvatar.classList.remove('shape-' + s));
+            if (avatarShape !== 'none') rpAvatar.classList.add('shape-' + avatarShape);
+        } else {
+            rpAvatar.style.display = 'none';
+        }
+        rpWrap.appendChild(rpAvatar);
+
         const isTransfer = msg.rpKind === 'transfer';
-        const rpNote = msg.rpNote || (isTransfer ? '转给你一份心意' : '点开有惊喜');
+        const rpNote = msg.rpNote || (isTransfer ? '转给你一份心意' : '恭喜发财，大吉大利');
         const rpAmount = msg.rpAmount || '';
         const rpOpened = !!msg.rpOpened;
-        rpWrap.innerHTML = `<div class="message-content-wrapper"><div class="message-bubble rp-bubble${msg.sender === 'user' ? ' rp-sent' : ''}" data-rpid="${msg.id}">
-            <div class="rp-top"><i class="fas ${isTransfer ? 'fa-paper-plane' : 'fa-gift'}"></i><span class="rp-title">${isTransfer ? '转账' : '红包'}</span></div>
-            <div class="rp-note">${rpNote}</div>
-            <div class="rp-amount">${rpOpened ? '已领取 · ' : ''}${rpAmount}</div>
-            <div class="rp-tip">${rpOpened ? '' : '点击拆开'}</div>
-        </div></div>`;
-        const bubbleEl = rpWrap.querySelector('.rp-bubble');
+        const rpReturned = !!msg.rpReturned;
+        const stateTxt = rpReturned ? '已退还' : (rpOpened ? (isTransfer ? '已收款' : '已领取') : (isTransfer ? '待收款' : ''));
+        const rpContent = document.createElement('div');
+        rpContent.className = 'message-content-wrapper';
+        rpContent.innerHTML = `<div class="message-bubble rp-bubble rp-${isTransfer ? 'transfer' : 'packet'}${rpOpened ? ' rp-opened' : ''}${rpReturned ? ' rp-returned' : ''}" data-rpid="${msg.id}">
+            <div class="rp-ico"><i class="fas ${isTransfer ? 'fa-arrow-right-arrow-left' : 'fa-envelope-open-text'}"></i></div>
+            <div class="rp-body">
+                <div class="rp-main">${isTransfer ? rpAmount : rpNote}</div>
+                ${isTransfer && rpNote ? `<div class="rp-sub">${rpNote}</div>` : ''}
+                ${isTransfer ? `<div class="rp-state">${stateTxt}</div>` : ''}
+                <div class="rp-brand">${isTransfer ? '转账' : '传讯红包'}${rpReturned ? ' · 已退还' : (rpOpened ? ' · 已领取' : '')}</div>
+            </div>
+        </div>`;
+        const bubbleEl = rpContent.querySelector('.rp-bubble');
         bubbleEl.addEventListener('click', () => {
-            if (msg.rpOpened) return;
+            // 只有对方发来的红包/转账可以由我方点击领取；
+            // 我方发出的由对方自行领取并回复（见 redpacket.js）
+            if (msg.sender !== 'partner' || msg.rpOpened || msg.rpReturned) return;
             msg.rpOpened = true;
             throttledSaveData();
             renderMessages();
-            const kind = isTransfer ? '转账' : '红包';
-            const thanksPool = ['谢谢你呀，突然的惊喜最动人了。', '收下了！这份心意我记在心里。', '哇，被你宠到了，谢谢。', '这就把温柔存起来，谢谢你！'];
-            const thanks = thanksPool[Math.floor(Math.random() * thanksPool.length)];
-            setTimeout(() => {
-                addMessage({ sender: 'partner', type: 'normal', text: `${msg.sender === 'user' ? '收到你的' + kind + '啦，' : ''}${thanks}` });
-            }, 1200);
+            if (typeof playSound === 'function') playSound('receive');
+            if (typeof showNotification === 'function') showNotification(`已领取 ${rpAmount}`, 'success', 1800);
+            // 对方无需对我方的领取动作进行回复 —— 到此为止
         });
+        rpWrap.appendChild(rpContent);
         fragment.appendChild(rpWrap);
         lastSenderRef.current = msg.sender;
         return fragment;
@@ -1027,7 +1059,7 @@ function createMessageFragment(msg, prevMsg, nextMsg, lastSenderRef) {
         decWrap.dataset.msgId = msg.id;
         const decOpts = (msg.decisionOptions || []).map(o => {
             const isChosen = msg.decisionChosen && String(msg.decisionChosen) === String(o);
-            return `<span class="decision-card-opt${isChosen ? ' chosen' : ''}">${isChosen ? '✓ ' : ''}${o}</span>`;
+            return `<div class="decision-card-opt${isChosen ? ' chosen' : ''}"><span class="dco-clover">🍀</span><span class="dco-text">${o}</span>${isChosen ? '<span class="dco-check">✓</span>' : ''}</div>`;
         }).join('');
         decWrap.innerHTML = `<div class="decision-card">
             <div class="decision-card-q"><i class="fas fa-circle-question"></i>${msg.text || ''}</div>
@@ -1327,6 +1359,13 @@ const addMessage = (message) => {
         if (message.sender === 'partner' && (!message.type || message.type === 'normal') &&
             typeof window.maybePartnerRedpacket === 'function') {
             setTimeout(window.maybePartnerRedpacket, 120);
+        }
+    } catch (e) {}
+
+    // 对方发来消息时，若主页打开中，在「聊天」图标上记未读红点
+    try {
+        if (message.sender === 'partner' && typeof window.markChatUnread === 'function') {
+            window.markChatUnread();
         }
     } catch (e) {}
 

@@ -446,8 +446,8 @@ const tourSteps = [
     },
     {
         element: '#home-status-mood',
-        title: "💗 Ta 的状态 & 纪念日",
-        content: "中间是 <b>Ta 的状态</b>（心晴手账已挪到这里，点击即可查看）；右侧是<b>相遇纪念日</b>，从相遇第一天算起，点击能看所有纪念日。",
+        title: "📱 Ta 的手机 & 纪念日",
+        content: "中间是 <b>Ta 的手机</b>：能看到 Ta 的心情、状态与摸鱼状态，点进去还有 Ta 的朋友圈、信笺、心情手账和摸鱼小记；右侧是<b>相遇纪念日</b>，从相遇第一天算起，点击能看所有纪念日。",
         position: 'bottom'
     },
     {
@@ -477,6 +477,8 @@ function startTour() {
         }
     } catch (e) {}
     isTourActive = true;
+    // 引导期间展开顶栏（平时默认收起，双击唤出）
+    try { if (typeof window.setChatHeaderCollapsed === 'function') window.setChatHeaderCollapsed(false); } catch (e) {}
     tourOverlay.style.display = 'block';
     setTimeout(() => tourOverlay.classList.add('active'), 10);
     currentTourStep = 0;
@@ -494,6 +496,8 @@ function endTour() {
         tourHighlightBox.style.opacity = '0';
     }, 300);
     localforage.setItem(APP_PREFIX + 'tour_seen', 'true');
+    // 引导结束后恢复「顶栏默认收起，双击唤出」的状态
+    try { if (typeof window.setChatHeaderCollapsed === 'function') window.setChatHeaderCollapsed(true); } catch (e) {}
     // 引导结束后进入主页
     setTimeout(() => { if (typeof window.showHomePage === 'function') window.showHomePage(); }, 500);
     document.querySelectorAll('.modal').forEach(m => hideModal(m));

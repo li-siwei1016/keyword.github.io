@@ -237,14 +237,16 @@ function addMomentComment(postId, by, text, image) {
     if (by === 'partner') markMomentsUnread();
 }
 
-/* 我方评论后，对方用字卡库 / 表情包回复（次数不限） */
+/* 我方评论后，对方用字卡库 / 表情包回复（次数不限）
+   回复等待时间可在 聊天设置→节奏 调节（默认 30s） */
 function partnerReplyToComment(postId) {
     const textPool = getMomentReplyPool();
     const stickers = getPartnerStickerPool();
     const rounds = Math.random() < 0.68 ? 1 : 2;
+    const base = ((typeof settings !== 'undefined' && Number(settings.momentReplyDelay)) || 30) * 1000;
 
     for (let i = 0; i < rounds; i++) {
-        const wait = 1400 + i * 1800 + Math.random() * 1600;
+        const wait = base + i * 3000 + Math.random() * 3000;
         setTimeout(() => {
             const post = momentsData.find(p => String(p.id) === String(postId));
             if (!post) return;
@@ -392,7 +394,7 @@ function maybePartnerPost() {
 }
 
 /* ---------------- 面板 ---------------- */
-/* 封面：双方头像 + 头像框 + 相遇纪念日 */
+/* 封面：双方头像 + 头像框 + 我方自定义签名 */
 function renderMomentsHeader() {
     const wrapP = document.getElementById('moments-av-partner');
     const wrapU = document.getElementById('moments-av-user');
@@ -407,28 +409,58 @@ function renderMomentsHeader() {
     fill(wrapP, 'partner', 'partnerAvatarFrame');
     fill(wrapU, 'user', 'myAvatarFrame');
 
-    // 相遇纪念日：优先用设置的相遇日，否则取最早的一条「纪念日」
-    const dateInput = document.getElementById('moments-meet-date');
-    if (dateInput && !dateInput.dataset.meetBound) {
-        dateInput.dataset.meetBound = '1';
-        dateInput.addEventListener('change', () => {
-            settings.meetDate = dateInput.value || '';
-            if (typeof throttledSaveData === 'function') throttledSaveData();
-            updateMeetDaysText();
-        });
-    }
-    if (dateInput && !dateInput.value) {
-        let earliest = (settings && settings.meetDate) || '';
-        if (!earliest && Array.isArray(anniversaries)) {
-            const anns = anniversaries
-                .filter(a => a.type === 'anniversary' && a.date)
-                .map(a => a.date)
-                .sort();
-            if (anns.length) earliest = anns[0];
+    // 我方头像下方：自定义签名（点击编辑）
+    const sigEl = document.getElementById('moments-signature-text');
+    if (sigEl) {
+        sigEl.textContent = (settings && settings.momentsSignature) || '点击设置签名';
+        if (!sigEl.dataset.sigBound) {
+            sigEl.dataset.sigBound = '1';
+            const edit = () => {
+                const cur = (settings && settings.momentsSignature) || '';
+                const v = prompt('设置你的朋友圈签名：', cur);
+                if (v === null) return;
+                settings.momentsSignature = v.trim().slice(0, 40);
+                sigEl.textContent = settings.momentsSignature || '点击设置签名';
+                if (typeof throttledSaveData === 'function') throttledSaveData();
+                if (typeof showNotification === 'function' && settings.momentsSignature) showNotification('签名已更新', 'success', 1500);
+            };
+            sigEl.addEventListener('click', edit);
+            const line = document.getElementById('mp-sigline');
+            if (line) line.addEventListener('click', edit);
         }
-        dateInput.value = earliest || '';
     }
-    updateMeetDaysText();
+}
+
+/* 封面下拉：参照微信朋友圈，下拉时封面随手指拉伸，松手回弹 */
+function initCoverPull() {
+    const scroll = document.querySelector('#moments-modal .mp-scroll');
+    const cover = document.getElementById('mp-cover');
+    if (!scroll || !cover || cover.dataset.pullBound) return;
+    cover.dataset.pullBound = '1';
+    const BASE_H = 190;
+    let startY = 0, pulling = false;
+    scroll.addEventListener('touchstart', (e) => {
+        if (scroll.scrollTop <= 0) { startY = e.touches[0].clientY; pulling = true; }
+        else pulling = false;
+    }, { passive: true });
+    scroll.addEventListener('touchmove', (e) => {
+        if (!pulling) return;
+        const dy = e.touches[0].clientY - startY;
+        if (dy > 0 && scroll.scrollTop <= 0) {
+            const grow = Math.min(dy * 0.55, 170);
+            cover.style.transition = 'none';
+            cover.style.height = (BASE_H + grow) + 'px';
+        }
+    }, { passive: true });
+    const release = () => {
+        if (!pulling) return;
+        pulling = false;
+        cover.style.transition = 'height 0.38s cubic-bezier(0.25,0.8,0.35,1.1)';
+        cover.style.height = '';
+        setTimeout(() => { cover.style.transition = ''; }, 420);
+    };
+    scroll.addEventListener('touchend', release);
+    scroll.addEventListener('touchcancel', release);
 }
 
 function updateMeetDaysText() {
@@ -670,6 +702,7 @@ function initMomentsModule() {
     }
 
     initMomentsLongPress();
+    initCoverPull();
 
     // 定时按概率判定对方是否发布动态
     if (!momentsTicker) {

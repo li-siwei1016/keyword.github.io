@@ -44,6 +44,9 @@
         page.style.display = 'block';
         homeOpen = true;
         renderHome();
+        // 头像可能异步加载，补两次重试确保上传的头像显示
+        setTimeout(renderAvatars, 800);
+        setTimeout(renderAvatars, 2400);
         if (!clockTimer) clockTimer = setInterval(renderClock, 1000);
     }
 
@@ -57,6 +60,34 @@
     window.showHomePage = showHomePage;
     window.hideHomePage = hideHomePage;
     window.isHomeOpen = () => homeOpen;
+
+    /* ---------------- 聊天未读红点 ---------------- */
+    let chatUnread = 0;
+    function updateChatDot() {
+        const dot = document.getElementById('chat-unread-dot');
+        if (dot) dot.style.display = chatUnread > 0 ? 'block' : 'none';
+    }
+    function markChatUnread() {
+        // 主页打开、或有弹窗盖住聊天页时记为未读（聊天页正面可见时不记）
+        let covered = homeOpen;
+        if (!covered) {
+            try {
+                covered = [...document.querySelectorAll('.modal')].some(m => {
+                    const cs = getComputedStyle(m);
+                    return cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0;
+                });
+            } catch (e) {}
+        }
+        if (!covered) return;
+        chatUnread += 1;
+        updateChatDot();
+    }
+    function clearChatUnread() {
+        chatUnread = 0;
+        updateChatDot();
+    }
+    window.markChatUnread = markChatUnread;
+    window.clearChatUnread = clearChatUnread;
 
     /* ---------------- 渲染 ---------------- */
     function renderHome() {
@@ -111,7 +142,11 @@
         if (!dEl || !tEl || !gEl) return;
         const d = new Date();
         const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-        dEl.textContent = `${d.getMonth() + 1} 月 ${d.getDate()} 日 · 星期${week}`;
+        // 窄屏用紧凑日期，避免换行挤压
+        const narrow = (window.innerWidth || 400) < 380;
+        dEl.textContent = narrow
+            ? `${d.getMonth() + 1}/${d.getDate()} 周${week}`
+            : `${d.getMonth() + 1} 月 ${d.getDate()} 日 · 星期${week}`;
         tEl.textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         const h = d.getHours();
         let greet = '你好呀';
@@ -119,25 +154,208 @@
         gEl.textContent = greet;
     }
 
-    function renderPartnerStatus() {
+    /* ---------------- Ta 的手机卡片 ---------------- */
+    function renderHomePhoneCard() {
         const moodEl = document.getElementById('home-status-mood-text');
-        const wEl = document.getElementById('home-status-weather-text');
-        if (!moodEl || !wEl) return;
-        try {
-            const data = window.moodData || {};
-            const today = todayStr();
-            const entry = data[today] || {};
-            // 心情 key → 表情/文案
-            let moodTxt = '还没有记录';
-            const opts = (typeof customMoodOptions !== 'undefined' && customMoodOptions.length ? customMoodOptions : (typeof MOOD_OPTIONS !== 'undefined' ? MOOD_OPTIONS : []));
-            if (entry.partner) {
-                const opt = opts.find(o => o.key === entry.partner);
-                moodTxt = opt ? `${opt.kaomoji} ${opt.label}` : entry.partner;
-            }
-            moodEl.textContent = moodTxt;
-            wEl.textContent = entry.partnerWeather ? `天气：${entry.partnerWeather}` : '点击查看心晴手账';
-        } catch (e) {}
+        const statusEl = document.getElementById('home-status-status-text');
+        const slackEl = document.getElementById('home-status-slacking-text');
+        // 心情：心晴手账今日记录
+        if (moodEl) {
+            try {
+                const data = window.moodData || {};
+                const entry = data[todayStr()] || {};
+                let moodTxt = '心情：还没有记录';
+                const opts = (typeof customMoodOptions !== 'undefined' && customMoodOptions.length ? customMoodOptions : (typeof MOOD_OPTIONS !== 'undefined' ? MOOD_OPTIONS : []));
+                if (entry.partner) {
+                    const opt = opts.find(o => o.key === entry.partner);
+                    moodTxt = '心情：' + (opt ? `${opt.kaomoji} ${opt.label}` : entry.partner);
+                }
+                moodEl.textContent = moodTxt;
+            } catch (e) {}
+        }
+        // 状态：抓取字卡库的状态字卡（settings.partnerStatus 由状态库轮换取）
+        if (statusEl) {
+            try {
+                const st = (typeof settings !== 'undefined' && settings.partnerStatus) || '';
+                statusEl.textContent = '状态：' + (st || '—');
+            } catch (e) {}
+        }
+        // 摸鱼状态（触发时显示）
+        if (slackEl) {
+            try {
+                const txt = (typeof window.getSlackingText === 'function') ? window.getSlackingText() : '';
+                if (txt) {
+                    slackEl.textContent = '摸鱼中 · ' + txt;
+                    slackEl.style.display = '';
+                } else {
+                    slackEl.style.display = 'none';
+                }
+            } catch (e) {}
+        }
     }
+    window.renderHomePhoneCard = renderHomePhoneCard;
+
+    function renderPartnerStatus() { renderHomePhoneCard(); }
+
+    /* ---------------- Ta 的手机弹窗 ---------------- */
+    let phoneViewKey = '';
+
+    function openPhoneModal() {
+        const modal = document.getElementById('phone-modal');
+        if (!modal) return;
+        showPhoneMenu();
+        showModal(modal);
+    }
+
+    function showPhoneMenu() {
+        phoneViewKey = '';
+        const menu = document.getElementById('phone-menu');
+        const view = document.getElementById('phone-view');
+        if (menu) menu.style.display = '';
+        if (view) view.style.display = 'none';
+    }
+
+    function showPhoneView(key) {
+        phoneViewKey = key;
+        const menu = document.getElementById('phone-menu');
+        const view = document.getElementById('phone-view');
+        if (menu) menu.style.display = 'none';
+        if (view) view.style.display = '';
+        renderPhoneView(key);
+    }
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function renderPhoneView(key) {
+        const body = document.getElementById('phone-view-body');
+        if (!body) return;
+        const name = (typeof settings !== 'undefined' && settings.partnerName) || 'Ta';
+
+        if (key === 'status') {
+            // Ta 的状态：字卡库状态字卡 + 心情 + 摸鱼
+            const st = (typeof settings !== 'undefined' && settings.partnerStatus) || '—';
+            let moodTxt = '还没有记录';
+            try {
+                const data = window.moodData || {};
+                const entry = data[todayStr()] || {};
+                const opts = (typeof customMoodOptions !== 'undefined' && customMoodOptions.length ? customMoodOptions : (typeof MOOD_OPTIONS !== 'undefined' ? MOOD_OPTIONS : []));
+                if (entry.partner) {
+                    const opt = opts.find(o => o.key === entry.partner);
+                    moodTxt = opt ? `${opt.kaomoji} ${opt.label}` : entry.partner;
+                }
+            } catch (e) {}
+            const slackTxt = (typeof window.getSlackingText === 'function') ? window.getSlackingText() : '';
+            body.innerHTML = `
+                <div class="pv-title">${esc(name)} 的状态</div>
+                <div class="pv-card">
+                    <div class="pv-row"><span class="pv-k">当前状态</span><span class="pv-v">${esc(st)}</span></div>
+                    <div class="pv-row"><span class="pv-k">今日心情</span><span class="pv-v">${esc(moodTxt)}</span></div>
+                    ${slackTxt ? `<div class="pv-row"><span class="pv-k">摸鱼状态</span><span class="pv-v pv-slacking">${esc(slackTxt)}</span></div>` : ''}
+                </div>
+                <button class="pv-btn" id="pv-status-refresh"><i class="fas fa-rotate"></i> 换一条状态</button>
+                <div class="pv-hint">状态抓取自「字卡库 → 氛围感 → 对方状态」中的状态字卡</div>`;
+            const btn = body.querySelector('#pv-status-refresh');
+            if (btn) btn.addEventListener('click', () => {
+                if (typeof window._triggerStatusChange === 'function') window._triggerStatusChange();
+                setTimeout(() => renderPhoneView('status'), 150);
+                renderHomePhoneCard();
+            });
+            return;
+        }
+
+        if (key === 'moments') {
+            // Ta 的朋友圈：对方自主发布的动态
+            let posts = [];
+            try { posts = (typeof momentsData !== 'undefined' ? momentsData : []).filter(p => p.author === 'partner'); } catch (e) {}
+            posts = posts.slice().sort((a, b) => (b.time || 0) - (a.time || 0)).slice(0, 30);
+            if (!posts.length) {
+                body.innerHTML = `<div class="pv-title">${esc(name)} 的朋友圈</div><div class="pv-empty">Ta 还没有发布动态<br>等 Ta 想起来就会发啦</div>`;
+                return;
+            }
+            body.innerHTML = `<div class="pv-title">${esc(name)} 的朋友圈</div>` + posts.map(p => `
+                <div class="pv-card pv-moment">
+                    ${p.text ? `<div class="pv-m-text">${esc(p.text)}</div>` : ''}
+                    ${p.image ? `<img class="pv-m-img" src="${p.image}" alt="">` : ''}
+                    <div class="pv-m-meta">${new Date(p.time || Date.now()).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} · ${(p.likes || []).length} 赞 · ${(p.comments || []).length} 评论</div>
+                </div>`).join('');
+            return;
+        }
+
+        if (key === 'letters') {
+            // Ta 的信笺：对方投递/回复的信封（收件箱）
+            let inbox = [];
+            try { inbox = (typeof envelopeData !== 'undefined' && envelopeData.inbox) ? envelopeData.inbox : []; } catch (e) {}
+            inbox = inbox.slice().sort((a, b) => (b.receivedTime || 0) - (a.receivedTime || 0)).slice(0, 30);
+            if (!inbox.length) {
+                body.innerHTML = `<div class="pv-title">${esc(name)} 的信笺</div><div class="pv-empty">还没有收到 Ta 的信<br>给 Ta 寄一封信，就会收到回音啦</div>`;
+                return;
+            }
+            body.innerHTML = `<div class="pv-title">${esc(name)} 的信笺</div>` + inbox.map(l => `
+                <div class="pv-card pv-letter" data-letter="${esc(l.id)}">
+                    <div class="pv-l-content">${esc((l.content || '').slice(0, 120))}${(l.content || '').length > 120 ? '…' : ''}</div>
+                    <div class="pv-m-meta">${new Date(l.receivedTime || Date.now()).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>`).join('');
+            body.querySelectorAll('.pv-letter').forEach(card => {
+                card.addEventListener('click', () => {
+                    const id = card.dataset.letter;
+                    hideModal(document.getElementById('phone-modal'));
+                    if (typeof window.viewEnvLetter === 'function') window.viewEnvLetter('inbox', id);
+                });
+            });
+            return;
+        }
+
+        if (key === 'slacking') {
+            // 摸鱼小记：往日摸鱼状态记录
+            const log = (typeof window.getSlackingLog === 'function') ? window.getSlackingLog() : [];
+            if (!log.length) {
+                body.innerHTML = `<div class="pv-title">摸鱼小记</div><div class="pv-empty">还没有摸鱼记录<br>Ta 偶尔摸鱼时会记在这里</div>`;
+                return;
+            }
+            body.innerHTML = `<div class="pv-title">摸鱼小记</div>` + log.map(r => `
+                <div class="pv-card pv-slack">
+                    <div class="pv-m-text"><i class="fas fa-coffee pv-s-ico"></i>${esc(r.text || '')}</div>
+                    <div class="pv-m-meta">${new Date(r.time || Date.now()).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}${r.mins ? ' · 约 ' + r.mins + ' 分钟' : ''}</div>
+                </div>`).join('');
+            return;
+        }
+    }
+
+    function initPhoneModal() {
+        const statusCard = document.getElementById('home-status-mood');
+        if (statusCard && !statusCard.dataset.pb) {
+            statusCard.dataset.pb = '1';
+            statusCard.addEventListener('click', openPhoneModal);
+        }
+        const closeBtn = document.getElementById('close-phone-modal');
+        if (closeBtn && !closeBtn.dataset.pb) {
+            closeBtn.dataset.pb = '1';
+            closeBtn.addEventListener('click', () => hideModal(document.getElementById('phone-modal')));
+        }
+        const backBtn = document.getElementById('phone-view-back');
+        if (backBtn && !backBtn.dataset.pb) {
+            backBtn.dataset.pb = '1';
+            backBtn.addEventListener('click', showPhoneMenu);
+        }
+        const menu = document.getElementById('phone-menu');
+        if (menu && !menu.dataset.pb) {
+            menu.dataset.pb = '1';
+            menu.addEventListener('click', (e) => {
+                const item = e.target.closest('.phone-menu-item');
+                if (!item) return;
+                const key = item.dataset.phone;
+                if (key === 'mood') {
+                    hideModal(document.getElementById('phone-modal'));
+                    triggerStub('mood-function');
+                    return;
+                }
+                showPhoneView(key);
+            });
+        }
+    }
+    window.openPhoneModal = openPhoneModal;
 
     function renderAnniversary() {
         const daysEl = document.getElementById('home-anniv-days');
@@ -293,9 +511,13 @@
             const idx = Number(frame.dataset.frame) || 0;
             const photos = loadPhotos();
             if (!photos[idx]) { openPhotoPicker(idx); return; }
-            // 单击轮换：把三格照片向前轮转一格
+            // 单击轮换：三张照片先收拢再散开，在中点交换顺序
             const a = photos[0], b = photos[1], c = photos[2];
-            if (a || b || c) { savePhotos([b, c, a]); renderFrames(); }
+            if (!(a || b || c)) return;
+            if (framesEl.classList.contains('hf-shuffling')) return;
+            framesEl.classList.add('hf-shuffling');
+            setTimeout(() => { savePhotos([b, c, a]); renderFrames(); }, 250);
+            setTimeout(() => framesEl.classList.remove('hf-shuffling'), 560);
         });
 
         framesEl.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -350,7 +572,7 @@
         const tileChat = document.getElementById('home-tile-chat');
         if (tileChat && !tileChat.dataset.hb) {
             tileChat.dataset.hb = '1';
-            tileChat.addEventListener('click', hideHomePage);
+            tileChat.addEventListener('click', () => { clearChatUnread(); hideHomePage(); });
         }
         const tileMoments = document.getElementById('home-tile-moments');
         if (tileMoments && !tileMoments.dataset.hb) {
@@ -378,10 +600,6 @@
             tileSettings.addEventListener('click', () => showModal(document.getElementById('settings-modal')));
         }
         const statusCard = document.getElementById('home-status-mood');
-        if (statusCard && !statusCard.dataset.hb) {
-            statusCard.dataset.hb = '1';
-            statusCard.addEventListener('click', () => triggerStub('mood-function'));
-        }
         const annivCard = document.getElementById('home-anniv-card');
         if (annivCard && !annivCard.dataset.hb) {
             annivCard.dataset.hb = '1';
@@ -389,6 +607,7 @@
         }
 
         initFrames();
+        initPhoneModal();
     }
 
     /* ---------------- 启动 ---------------- */
@@ -406,9 +625,9 @@
                 }
             } catch (e) {}
         };
-        // welcome 动画约 3.5s 后隐藏，等它结束再进主页
-        setTimeout(checkSeen, 4200);
-        setTimeout(checkSeen, 6500);
+        // welcome 动画期间就把主页铺好（公告层覆盖在其上），关闭公告时无聊天页闪过
+        setTimeout(checkSeen, 1200);
+        setTimeout(checkSeen, 3600);
 
         // 兜底轮询：声明层与引导层都消失且看过声明 → 进主页
         let tries = 0;
