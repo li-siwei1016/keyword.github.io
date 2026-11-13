@@ -1,6 +1,7 @@
 /**
  * home.js - 主页
- * 公告/声明结束后进入主页；包含：头像+链接波纹+随机签名、三合一相框、
+ * 公告/声明结束后进入主页；包含：头像+链接波纹+随机签名+链接状态条、
+ * 六张拍立得相框（上排 3 张 + 下排 3 张）、
  * 时间/对方状态/相遇纪念日、聊天/朋友圈/信件、字卡库/高级功能/设置。
  * 主页主题色/相框颜色/背景图可在 外观设置→主页主题 自定义。
  */
@@ -438,9 +439,16 @@
         } catch (e) { return ''; }
     }
 
-    /* ---------------- 相框 ---------------- */
+    /* ---------------- 相框（6 张：上排 3 张 + 下排 3 张） ---------------- */
+    const FRAME_COUNT = 6;
     function loadPhotos() {
-        try { return JSON.parse(localStorage.getItem(PHOTOS_KEY) || '[null,null,null]'); } catch (e) { return [null, null, null]; }
+        let arr;
+        try { arr = JSON.parse(localStorage.getItem(PHOTOS_KEY) || 'null'); } catch (e) { arr = null; }
+        if (!Array.isArray(arr)) arr = [];
+        // 旧版本只有 3 张 → 补齐到 6 槽；超长截断
+        while (arr.length < FRAME_COUNT) arr.push(null);
+        if (arr.length > FRAME_COUNT) arr = arr.slice(0, FRAME_COUNT);
+        return arr;
     }
     function savePhotos(arr) {
         try { localStorage.setItem(PHOTOS_KEY, JSON.stringify(arr)); } catch (e) {}
@@ -561,13 +569,19 @@
             const idx = Number(frame.dataset.frame) || 0;
             const photos = loadPhotos();
             if (!photos[idx]) { openPhotoPicker(idx); return; }
-            // 单击轮换：三张照片先收拢再散开，在中点交换顺序
-            const a = photos[0], b = photos[1], c = photos[2];
+            // 单击轮换：所在行的三张照片先收拢再散开，在中点交换顺序（两行各自独立）
+            const row = Math.floor(idx / 3);
+            const base = row * 3;
+            const a = photos[base], b = photos[base + 1], c = photos[base + 2];
             if (!(a || b || c)) return;
-            if (framesEl.classList.contains('hf-shuffling')) return;
-            framesEl.classList.add('hf-shuffling');
-            setTimeout(() => { savePhotos([b, c, a]); renderFrames(); }, 250);
-            setTimeout(() => framesEl.classList.remove('hf-shuffling'), 560);
+            const cls = row === 0 ? 'hf-shuffling' : 'hf-shuffling2';
+            if (framesEl.classList.contains(cls)) return;
+            framesEl.classList.add(cls);
+            setTimeout(() => {
+                photos[base] = b; photos[base + 1] = c; photos[base + 2] = a;
+                savePhotos(photos); renderFrames();
+            }, 250);
+            setTimeout(() => framesEl.classList.remove(cls), 560);
         });
 
         framesEl.addEventListener('contextmenu', (e) => e.preventDefault());

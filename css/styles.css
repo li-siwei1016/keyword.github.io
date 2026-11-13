@@ -11801,6 +11801,11 @@
         }
 
         /* 第一行：头像 + 链接波纹 + 签名 */
+        #home-page .home-pair-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
         #home-page .home-pair-avatars {
             display: flex;
             align-items: flex-start;
@@ -11815,6 +11820,15 @@
             padding: 3px 14px 4px;
             background: rgba(var(--accent-color-rgb), 0.07);
             border-color: rgba(var(--accent-color-rgb), 0.24);
+        }
+        #home-page .home-link-status .ls-label {
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        @media (max-width: 400px) {
+            #home-page .home-link-status { padding: 3px 10px 4px; gap: 6px; }
+            #home-page .home-link-status .ls-hearts { gap: 3px; font-size: 10px; }
+            #home-page .home-link-status .ls-label { font-size: 10.5px; letter-spacing: 0.5px; }
         }
         [data-theme="dark"] #home-page .home-link-status {
             background: rgba(var(--accent-color-rgb), 0.16);
@@ -11909,7 +11923,7 @@
         #home-page .home-frames {
             position: relative;
             width: 100%;
-            height: 150px;
+            height: 200px;
             cursor: pointer;
         }
         #home-page .home-frame {
@@ -11928,11 +11942,21 @@
             transition: transform 0.28s ease, left 0.28s ease, top 0.28s ease;
             overflow: hidden;
         }
+        /* 第一行：原有三张 */
         #home-page .home-frame[data-frame="0"] { left: 4%; top: 10px; transform: rotate(-6deg); z-index: 1; }
         #home-page .home-frame[data-frame="1"] { left: 34%; top: 2px; transform: rotate(2deg); z-index: 2; }
         #home-page .home-frame[data-frame="2"] { left: 63%; top: 12px; transform: rotate(7deg); z-index: 3; }
-        /* 单击轮换动画：三张照片先收拢到中间，再散开 */
-        #home-page .home-frames.hf-shuffling .home-frame {
+        /* 第二行：新增三张，位于原来相片的下方 */
+        #home-page .home-frame[data-frame="3"] { left: 5%; top: 106px; transform: rotate(5deg); z-index: 1; }
+        #home-page .home-frame[data-frame="4"] { left: 34%; top: 98px; transform: rotate(-3deg); z-index: 2; }
+        #home-page .home-frame[data-frame="5"] { left: 62%; top: 108px; transform: rotate(-8deg); z-index: 3; }
+        /* 单击轮换动画：该行三张照片先收拢到中间，再散开（两行各自独立） */
+        #home-page .home-frames.hf-shuffling .home-frame[data-frame="0"],
+        #home-page .home-frames.hf-shuffling .home-frame[data-frame="1"],
+        #home-page .home-frames.hf-shuffling .home-frame[data-frame="2"],
+        #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="3"],
+        #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="4"],
+        #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="5"] {
             transition: transform 0.26s cubic-bezier(0.55,0,0.7,0.4), left 0.26s cubic-bezier(0.55,0,0.7,0.4), top 0.26s cubic-bezier(0.55,0,0.7,0.4), box-shadow 0.26s ease;
         }
         #home-page .home-frames.hf-shuffling .home-frame[data-frame="0"],
@@ -11942,6 +11966,35 @@
             top: 6px;
             transform: rotate(0deg) scale(0.78);
             box-shadow: 0 2px 6px rgba(110, 120, 160, 0.12);
+        }
+        #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="3"],
+        #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="4"],
+        #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="5"] {
+            left: 36%;
+            top: 102px;
+            transform: rotate(0deg) scale(0.78);
+            box-shadow: 0 2px 6px rgba(110, 120, 160, 0.12);
+        }
+        /* 小屏（≤400px）：缩小相框并压缩两行间距，避免溢出右卡 */
+        @media (max-width: 400px) {
+            #home-page .home-frames { height: 142px; }
+            #home-page .home-frame { width: 31%; min-width: 44px; max-width: 76px; }
+            #home-page .home-frame[data-frame="0"] { left: 3%; top: 8px; }
+            #home-page .home-frame[data-frame="1"] { left: 33%; top: 1px; }
+            #home-page .home-frame[data-frame="2"] { left: 62%; top: 9px; }
+            #home-page .home-frame[data-frame="3"] { left: 4%; top: 74px; }
+            #home-page .home-frame[data-frame="4"] { left: 33%; top: 67px; }
+            #home-page .home-frame[data-frame="5"] { left: 61%; top: 75px; }
+            #home-page .home-frames.hf-shuffling .home-frame[data-frame="0"],
+            #home-page .home-frames.hf-shuffling .home-frame[data-frame="1"],
+            #home-page .home-frames.hf-shuffling .home-frame[data-frame="2"] {
+                left: 35%; top: 4px;
+            }
+            #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="3"],
+            #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="4"],
+            #home-page .home-frames.hf-shuffling2 .home-frame[data-frame="5"] {
+                left: 35%; top: 70px;
+            }
         }
         #home-page .home-frame .hf-img {
             width: 100%;
@@ -12538,22 +12591,50 @@
         .mp-cover-me {
             position: absolute;
             right: 14px;
-            bottom: -26px;
+            bottom: -22px;
             display: flex;
             align-items: center;
             gap: 10px;
             z-index: 2;
         }
         .mp-cover-name { font-size: 14px; font-weight: 700; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,0.35); }
-        /* 我方头像：参照微信朋友圈头像（圆角小方块、约 72px、压住封面右下角） */
-        .mp-cover-av { width: 72px; height: 72px; font-size: 24px; border: 2.5px solid rgba(255,255,255,0.95); box-shadow: 0 3px 14px rgba(80,90,130,0.3); border-radius: 10px; }
+        /* 我方头像：参照微信朋友圈（64px 圆角小方块、白描边、压住封面右下角），图片裁剪填满 */
+        .mp-cover-av {
+            width: 64px;
+            height: 64px;
+            font-size: 22px;
+            border: 2.5px solid rgba(255,255,255,0.95);
+            box-shadow: 0 3px 14px rgba(80,90,130,0.3);
+            border-radius: 10px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--secondary-bg);
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .mp-cover-av img.m-av-img,
+        .mp-cover-av > img:not(.avatar-frame) {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: inherit;
+            display: block;
+        }
+        .mp-cover-av .avatar-frame { pointer-events: none; z-index: 3; }
+        .mp-cover-av > i { font-size: 22px; }
+        @media (max-width: 380px) {
+            .mp-cover-av { width: 56px; height: 56px; border-radius: 9px; }
+            .mp-cover-me { bottom: -19px; }
+        }
         /* 封面可下拉：拖动态势 */
         .mp-cover { touch-action: pan-y; will-change: height; }
         .mp-sigline {
             display: flex;
             align-items: center;
             gap: 7px;
-            padding: 38px 14px 10px;
+            padding: 34px 14px 10px;
             font-size: 11.5px;
             color: var(--text-secondary);
             cursor: pointer;
