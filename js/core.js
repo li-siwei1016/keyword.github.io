@@ -412,6 +412,12 @@ const loadData = async () => {
         if (savedCustomThemes) customThemes = savedCustomThemes;
         if (savedThemeSchemes) themeSchemes = savedThemeSchemes;
         try { const ce = await localforage.getItem(getStorageKey('customEmojis')); if (ce && Array.isArray(ce)) customEmojis = ce; } catch(e) {}
+        try {
+            const ck = await localforage.getItem(getStorageKey('customKaomoji'));
+            if (ck && Array.isArray(ck) && ck.length) customKaomoji = ck;
+            else customKaomoji = DEFAULT_KAOMOJI.slice();
+        } catch(e) { customKaomoji = DEFAULT_KAOMOJI.slice(); }
+        window.customKaomoji = customKaomoji;
         window._customReplies = customReplies;
         window._CONSTANTS = CONSTANTS;
 
@@ -463,11 +469,17 @@ const LIBRARY_CONFIG = {
         title: "回复库管理",
         tabs: [
             { id: 'custom', name: '主字卡', mode: 'list' },
+            { id: 'kaomoji', name: '颜文字', mode: 'grid' },
             { id: 'statuses', name: '状态字卡', mode: 'list' },
-            { id: 'slkPlaces', name: '摸鱼·地点', mode: 'list' },
-            { id: 'slkActs', name: '摸鱼·活动', mode: 'list' },
             { id: 'emojis', name: 'Emoji', mode: 'grid' },
             { id: 'stickers', name: '表情库', mode: 'grid' }
+        ]
+    },
+    slacking: {
+        title: "摸鱼管理",
+        tabs: [
+            { id: 'slkActs', name: '摸鱼活动', mode: 'list' },
+            { id: 'slkPlaces', name: '工作地点', mode: 'list' }
         ]
     },
     atmosphere: {
@@ -590,6 +602,7 @@ const saveData = async () => {
         { key: 'slackingPlaceGroups',     val: () => localforage.setItem(getStorageKey('slackingPlaceGroups'), (typeof slackingPlaceGroups !== 'undefined' ? slackingPlaceGroups : [])) },
         { key: 'slackingActGroups',       val: () => localforage.setItem(getStorageKey('slackingActGroups'), (typeof slackingActGroups !== 'undefined' ? slackingActGroups : [])) },
         { key: 'customEmojis',           val: () => localforage.setItem(getStorageKey('customEmojis'), customEmojis) },
+        { key: 'customKaomoji',          val: () => localforage.setItem(getStorageKey('customKaomoji'), customKaomoji) },
         { key: 'anniversaries',          val: () => localforage.setItem(getStorageKey('anniversaries'), anniversaries) },
         { key: 'customPokes',            val: () => localforage.setItem(getStorageKey('customPokes'), customPokes) },
         { key: 'customStatuses',         val: () => localforage.setItem(getStorageKey('customStatuses'), customStatuses) },
@@ -902,7 +915,10 @@ function manageAutoSendTimer() {
         };
 
         const updateAvatar = (element, src) => {
+            if (!element) return;
             if (src) element.innerHTML = `<img src="${src}" alt="avatar">`; else element.innerHTML = `<i class="fas fa-user"></i>`;
+            // 通知主页等处的头像副本同步刷新
+            try { window.dispatchEvent(new Event('app:avatar-updated')); } catch (e) {}
         };
 
         const removeBackground = () => {
@@ -2071,6 +2087,7 @@ function showModal(modalElement, focusElement = null) {
                     if (inclReplies)  {
                         exportObj.customReplies = customReplies;
                         if (customEmojis && customEmojis.length > 0) exportObj.customEmojis = customEmojis;
+                        if (window.customKaomoji && window.customKaomoji.length > 0) exportObj.customKaomoji = window.customKaomoji;
                         exportObj.exportModules.push('customReplies');
                     }
                     if (inclAnn)      { exportObj.anniversaries = anniversaries; exportObj.exportModules.push('anniversaries'); }
@@ -2284,6 +2301,11 @@ function showModal(modalElement, focusElement = null) {
                         }
                         if (doReplies  && importedData.customReplies)  customReplies  = importedData.customReplies;
                         if (doReplies  && importedData.customEmojis && Array.isArray(importedData.customEmojis)) customEmojis = importedData.customEmojis;
+                        if (doReplies  && importedData.customKaomoji && Array.isArray(importedData.customKaomoji)) {
+                            if (!Array.isArray(window.customKaomoji)) window.customKaomoji = [];
+                            window.customKaomoji.length = 0;
+                            importedData.customKaomoji.forEach(v => window.customKaomoji.push(v));
+                        }
                         if (doAnn      && importedData.anniversaries)   anniversaries  = importedData.anniversaries;
                         if (doThemes   && importedData.customThemes)    customThemes   = importedData.customThemes;
                         if (doThemes   && importedData.stickerLibrary)  stickerLibrary = importedData.stickerLibrary;

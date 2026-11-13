@@ -100,14 +100,62 @@
         applyHomeTheme();
     }
 
-    function renderAvatars() {
-        const pAv = document.getElementById('partner-avatar');
-        const mAv = document.getElementById('my-avatar');
-        const hp = document.getElementById('home-av-partner');
-        const hm = document.getElementById('home-av-me');
-        if (pAv && hp) hp.innerHTML = pAv.innerHTML;
-        if (mAv && hm) hm.innerHTML = mAv.innerHTML;
+    /* ---------------- 头像（使用「我的头像 / 对方头像」上传的图片） ---------------- */
+    const _avCache = { partner: null, me: null };   // 兜底缓存，避免初始化竞态
+    let _avLoading = false;
+
+    function _avatarSrcFromDom(id) {
+        const el = document.getElementById(id);
+        const img = el ? el.querySelector('img') : null;
+        return img ? (img.getAttribute('src') || '') : '';
     }
+    function _paintAvatarBox(box, src, ready) {
+        if (!box) return;
+        if (src) {
+            let img = box.querySelector('img');
+            if (!img) {
+                box.innerHTML = '<img alt="avatar">';
+                img = box.querySelector('img');
+            }
+            if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+        } else if (ready) {
+            // 明确没有上传头像 → 显示默认图标
+            if (!box.querySelector('i')) box.innerHTML = '<i class="fas fa-user"></i>';
+        }
+    }
+    async function _loadAvatarFromStore(needPartner, needMe) {
+        if (_avLoading) return;
+        if (typeof localforage === 'undefined' || typeof getStorageKey === 'undefined') return;
+        _avLoading = true;
+        try {
+            if (needPartner) {
+                const src = await localforage.getItem(getStorageKey('partnerAvatar'));
+                if (src) { _avCache.partner = src; _paintAvatarBox(document.getElementById('home-av-partner'), src, false); }
+            }
+            if (needMe) {
+                const src = await localforage.getItem(getStorageKey('myAvatar'));
+                if (src) { _avCache.me = src; _paintAvatarBox(document.getElementById('home-av-me'), src, false); }
+            }
+        } catch (e) {} finally { _avLoading = false; }
+    }
+    function renderAvatars() {
+        const pEl = document.getElementById('partner-avatar');
+        const mEl = document.getElementById('my-avatar');
+        // 聊天头像容器里有内容 = 初始化完成，此时以它为准；否则先用缓存 / 本地存储兜底
+        const pReady = !!(pEl && pEl.childElementCount > 0);
+        const mReady = !!(mEl && mEl.childElementCount > 0);
+        const pDomSrc = pReady ? _avatarSrcFromDom('partner-avatar') : '';
+        const mDomSrc = mReady ? _avatarSrcFromDom('my-avatar') : '';
+        if (pDomSrc) _avCache.partner = pDomSrc; else if (pReady) _avCache.partner = null;
+        if (mDomSrc) _avCache.me = mDomSrc; else if (mReady) _avCache.me = null;
+
+        _paintAvatarBox(document.getElementById('home-av-partner'), pReady ? pDomSrc : _avCache.partner, pReady);
+        _paintAvatarBox(document.getElementById('home-av-me'), mReady ? mDomSrc : _avCache.me, mReady);
+
+        if (!pReady || !mReady) _loadAvatarFromStore(!pReady, !mReady);
+    }
+    window.addEventListener('app:avatar-updated', () => { if (homeOpen) renderAvatars(); });
 
     function todayStr() {
         const d = new Date();

@@ -12129,7 +12129,8 @@
         #custom-replies-modal .reply-tab-btn {
             flex: 0 0 auto;
             white-space: nowrap;
-            padding: 8px 16px;
+            padding: 9px 20px;
+            font-size: 13.5px;
             min-width: 0;
         }
 
@@ -12853,3 +12854,41 @@
         }
         .home-theme-bg-btns { display: flex; flex-direction: column; gap: 6px; }
         .home-theme-bg-btns .modal-btn { font-size: 11.5px; padding: 7px 12px; }
+
+        /* ============ 颜文字库（回复库 → 颜文字） ============ */
+        #custom-replies-modal .content-list-area.grid-mode.kaomoji-mode {
+            grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)) !important;
+            gap: 10px !important;
+            align-content: start !important;
+        }
+        .kaomoji-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 46px;
+            padding: 8px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.35;
+            text-align: center;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .kaomoji-item:active { transform: scale(0.95); }
+        .kaomoji-item:hover { border-color: var(--accent-color); color: var(--accent-color); }
+        .kaomoji-add-item {
+            border-style: dashed;
+            color: var(--text-secondary);
+            font-size: 15px;
+            background: transparent;
+        }
+        .kaomoji-add-item:hover { background: rgba(var(--accent-color-rgb), 0.06); }

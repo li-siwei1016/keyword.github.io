@@ -6,6 +6,9 @@ if (typeof customStatusGroups === 'undefined') window.customStatusGroups = [];
 // 根据当前 tab 返回对应的分组上下文 {groups, items, itemLabel}
 function _getGroupCtx(tab) {
     tab = tab || currentSubTab;
+    if (tab === 'kaomoji') {
+        return { groups: [], items: _kaomojiPool(), itemLabel: '颜文字' };
+    }
     if (tab === 'pokes') {
         if (!window.customPokeGroups) window.customPokeGroups = [];
         return { groups: window.customPokeGroups, items: customPokes, itemLabel: '拍一拍' };
@@ -148,6 +151,9 @@ function _renderListContentOnly() {
 
     if (currentSubTab === 'custom') {
         itemsToRender = customReplies;
+    } else if (currentSubTab === 'kaomoji') {
+        itemsToRender = _kaomojiPool();
+        renderType = 'kaomoji';
     } else if (currentSubTab === 'emojis') {
         itemsToRender = CONSTANTS.REPLY_EMOJIS;
         renderType = 'emoji';
@@ -168,6 +174,7 @@ function _renderListContentOnly() {
         itemsToRender = customIntros;
     }
 
+    if (renderType === 'kaomoji') { _renderKaomojiTab(list, itemsToRender); return; }
     if (renderType === 'emoji') { _renderEmojiTab(list, itemsToRender); return; }
     if (renderType === 'image') { _renderStickerTab(list, itemsToRender); return; }
 
@@ -233,6 +240,7 @@ function renderReplyLibrary() {
 
     const activeTabConfig = currentConfig.tabs.find(t => t.id === currentSubTab);
     if (activeTabConfig) list.classList.add(activeTabConfig.mode + '-mode');
+    if (currentSubTab === 'kaomoji') list.classList.add('kaomoji-mode');
 
     _renderModernToolbar();
 
@@ -241,6 +249,9 @@ function renderReplyLibrary() {
 
     if (currentSubTab === 'custom') {
         itemsToRender = customReplies;
+    } else if (currentSubTab === 'kaomoji') {
+        itemsToRender = _kaomojiPool();
+        renderType = 'kaomoji';
     } else if (currentSubTab === 'emojis') {
         itemsToRender = CONSTANTS.REPLY_EMOJIS;
         renderType = 'emoji';
@@ -261,6 +272,7 @@ function renderReplyLibrary() {
         itemsToRender = customIntros;
     }
 
+    if (renderType === 'kaomoji') { _renderKaomojiTab(list, itemsToRender); return; }
     if (renderType === 'emoji') { _renderEmojiTab(list, itemsToRender); return; }
     if (renderType === 'image') { _renderStickerTab(list, itemsToRender); return; }
 
@@ -841,6 +853,88 @@ function _renderAtmosphereList(list, items) {
     list.appendChild(frag);
 }
 
+/* ---------------- 颜文字库 ---------------- */
+function _kaomojiPool() {
+    if (!Array.isArray(window.customKaomoji)) {
+        let base = [];
+        try { base = (typeof customKaomoji !== 'undefined' && Array.isArray(customKaomoji)) ? customKaomoji : []; } catch (e) {}
+        window.customKaomoji = base;
+    }
+    // 兜底：首次进入且数据尚未从本地读取时，用内置默认值
+    if (window.customKaomoji.length === 0 && typeof DEFAULT_KAOMOJI !== 'undefined') {
+        DEFAULT_KAOMOJI.forEach(k => window.customKaomoji.push(k));
+    }
+    return window.customKaomoji;
+}
+
+/** 把颜文字插入聊天输入框 */
+function _insertKaomoji(text) {
+    const input = (typeof DOMElements !== 'undefined' && DOMElements.messageInput)
+        || document.getElementById('message-input');
+    if (!input) {
+        try { navigator.clipboard.writeText(text); showNotification('已复制到剪贴板', 'success'); } catch (e) {}
+        return;
+    }
+    const start = input.selectionStart == null ? input.value.length : input.selectionStart;
+    const end = input.selectionEnd == null ? input.value.length : input.selectionEnd;
+    input.value = input.value.slice(0, start) + text + input.value.slice(end);
+    const caret = start + text.length;
+    try { input.setSelectionRange(caret, caret); } catch (e) {}
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    showNotification('✓ 已插入到输入框', 'success', 1200);
+}
+
+function _renderKaomojiTab(list, itemsToRender) {
+    const pool = _kaomojiPool();
+    const q = _searchQuery.toLowerCase().trim();
+    const items = q ? itemsToRender.filter(i => String(i).toLowerCase().includes(q)) : itemsToRender;
+
+    if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.innerHTML = renderEmptyState(q ? `未找到 "${q}"` : '还没有颜文字，点下方 ＋ 添加');
+        list.appendChild(empty.firstElementChild || empty);
+    }
+
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'kaomoji-item';
+        div.textContent = item;
+        div.title = '点击插入输入框 · 长按删除';
+        let pressTimer = null;
+        let longPressed = false;
+        div.addEventListener('pointerdown', () => {
+            longPressed = false;
+            pressTimer = setTimeout(() => {
+                longPressed = true;
+                const idx = pool.indexOf(item);
+                if (idx < 0) return;
+                if (confirm(`删除颜文字「${item}」？`)) {
+                    pool.splice(idx, 1);
+                    throttledSaveData();
+                    renderReplyLibrary();
+                }
+            }, 650);
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+            div.addEventListener(ev, () => clearTimeout(pressTimer)));
+        div.addEventListener('click', () => {
+            if (longPressed) { longPressed = false; return; }
+            _insertKaomoji(item);
+        });
+        list.appendChild(div);
+    });
+
+    if (!q) {
+        const addBtn = document.createElement('div');
+        addBtn.className = 'kaomoji-item kaomoji-add-item';
+        addBtn.innerHTML = '<i class="fas fa-plus"></i>';
+        addBtn.title = '添加颜文字';
+        addBtn.addEventListener('click', () => _showBatchAddDialog());
+        list.appendChild(addBtn);
+    }
+}
+
 function _renderEmojiTab(list, itemsToRender) {
     if (itemsToRender.length === 0 && customEmojis.length === 0) {
         list.innerHTML = renderEmptyState('暂无 Emoji'); return;
@@ -988,6 +1082,14 @@ function _runDedup() {
     const preEmoji = customEmojis.length;
     customEmojis = [...new Set(customEmojis)];
     totalRemoved += (preEmoji - customEmojis.length);
+    // 颜文字：就地去重（保持 window.customKaomoji 引用不被替换）
+    const ckPool = _kaomojiPool();
+    const ckDedup = deduplicateContentArray(ckPool);
+    if (ckDedup.removedCount > 0) {
+        ckPool.length = 0;
+        ckDedup.result.forEach(v => ckPool.push(v));
+    }
+    totalRemoved += ckDedup.removedCount;
     // 摸鱼地点 / 活动字卡去重（与主字卡一致：删除重复词条）
     let slkSaved = false;
     if (typeof slackingPlaces !== 'undefined') {
@@ -1445,6 +1547,7 @@ function _showExportUI() {
         { id: '_re_mottos',   icon: ICONS.quote,     label: '顶部格言',      count: customMottos.length,                      key: 'customMottos' },
         { id: '_re_intros',   icon: ICONS.play,      label: '开场动画',      count: customIntros.length,                      key: 'customIntros' },
         { id: '_re_emojis',   icon: ICONS.smile,     label: 'Emoji 库',      count: customEmojis.length,                      key: 'customEmojis' },
+        { id: '_re_kaomoji',  icon: ICONS.smile,     label: '颜文字库',      count: _kaomojiPool().length,                    key: 'customKaomoji' },
         { id: '_re_ann',      icon: ICONS.folderBig, label: '今日公告配置',  count: _annTotalCount,                           key: 'announcementConfig' },
         { id: '_re_groups',   icon: ICONS.folderBig, label: '字卡分组',      count: (customReplyGroups||[]).length,            key: 'customReplyGroups',  extra: true },
         { id: '_re_pokg',     icon: ICONS.folderBig, label: '拍一拍分组',    count: (window.customPokeGroups||[]).length,     key: 'customPokeGroups',   extra: true },
@@ -1564,6 +1667,7 @@ function _doExport(selectedModules) {
         else if (m.key === 'customMottos')     { libraryData.customMottos       = customMottos;                   libraryData.modules.push('mottos'); }
         else if (m.key === 'customIntros')     { libraryData.customIntros       = customIntros;                   libraryData.modules.push('intros'); }
         else if (m.key === 'customEmojis')     { libraryData.customEmojis       = customEmojis;                   libraryData.modules.push('emojis'); }
+        else if (m.key === 'customKaomoji')    { libraryData.customKaomoji      = _kaomojiPool();                 libraryData.modules.push('kaomoji'); }
         else if (m.key === 'customReplyGroups')  { libraryData.customReplyGroups  = window.customReplyGroups  || []; libraryData.modules.push('groups'); }
         else if (m.key === 'customPokeGroups')   { libraryData.customPokeGroups   = window.customPokeGroups   || []; libraryData.modules.push('pokeGroups'); }
         else if (m.key === 'customStatusGroups') { libraryData.customStatusGroups = window.customStatusGroups || []; libraryData.modules.push('statusGroups'); }
@@ -1752,7 +1856,7 @@ function _parseFlexibleJSON(text) {
 
 function _normalizeImportData(data) {
     if (!data || typeof data !== 'object') return data;
-    const knownKeys = ['customReplies','customPokes','customStatuses','customMottos','customIntros','customEmojis',
+    const knownKeys = ['customReplies','customPokes','customStatuses','customMottos','customIntros','customEmojis','customKaomoji',
                        'customReplyGroups','customPokeGroups','customStatusGroups','disabledDefaultReplies',
                        'announcementConfig','announcementText','announcementStatusPool'];
     const hasNewFormat = knownKeys.some(k => data[k] !== undefined && data[k] !== null);
@@ -1764,7 +1868,7 @@ function _normalizeImportData(data) {
 }
 
 function _showImportUI(data) {
-    const knownFields = ['customReplies','customPokes','customStatuses','customMottos','customIntros','customEmojis',
+    const knownFields = ['customReplies','customPokes','customStatuses','customMottos','customIntros','customEmojis','customKaomoji',
                          'customReplyGroups','customPokeGroups','customStatusGroups',
                          'announcementConfig','announcementText','announcementStatusPool'];
     const hasValid = knownFields.some(f => data[f] !== undefined && data[f] !== null);
@@ -1787,6 +1891,7 @@ function _showImportUI(data) {
         { id: '_ri_mottos',   icon: ICONS.quote,     label: '顶部格言',      data: data.customMottos,        key: 'customMottos' },
         { id: '_ri_intros',   icon: ICONS.play,      label: '开场动画',      data: data.customIntros,        key: 'customIntros' },
         { id: '_ri_emojis',   icon: ICONS.smile,     label: 'Emoji 库',      data: data.customEmojis,        key: 'customEmojis' },
+        { id: '_ri_kaomoji',  icon: ICONS.smile,     label: '颜文字库',      data: data.customKaomoji,       key: 'customKaomoji' },
         { id: '_ri_ann',      icon: ICONS.folderBig, label: '今日公告配置',  data: [_annCfg],                key: 'announcementConfig',    displayCount: _annCfgCount },
         { id: '_ri_anntext',  icon: ICONS.comment,   label: '公告文案',      data: [_annText],               key: 'announcementText',      displayCount: _annTextCount },
         { id: '_ri_annpool',  icon: ICONS.dot,       label: '状态随机库',    data: _annPool,                 key: 'announcementStatusPool', displayCount: _annPoolCount },
@@ -1808,6 +1913,12 @@ function _showImportUI(data) {
                     else if (m.key === 'customMottos')     { customMottos                = data.customMottos;        totalAdded += data.customMottos.length; }
                     else if (m.key === 'customIntros')     { customIntros                = data.customIntros;        totalAdded += data.customIntros.length; }
                     else if (m.key === 'customEmojis')     { customEmojis                = data.customEmojis; }
+                    else if (m.key === 'customKaomoji')    {
+                        const pool = _kaomojiPool();
+                        pool.length = 0;
+                        data.customKaomoji.forEach(v => pool.push(v));
+                        totalAdded += data.customKaomoji.length;
+                    }
                     else if (m.key === 'customReplyGroups')  { window.customReplyGroups  = data.customReplyGroups; }
                     else if (m.key === 'customPokeGroups')   { window.customPokeGroups   = data.customPokeGroups; }
                     else if (m.key === 'customStatusGroups') { window.customStatusGroups = data.customStatusGroups; }
@@ -1848,6 +1959,13 @@ function _showImportUI(data) {
                         totalAdded += customIntros.length - before;
                     } else if (m.key === 'customEmojis') {
                         customEmojis = [...new Set([...customEmojis, ...data.customEmojis])];
+                    } else if (m.key === 'customKaomoji') {
+                        const pool = _kaomojiPool();
+                        const before = pool.length;
+                        const merged = deduplicateContentArray([...pool, ...data.customKaomoji]).result;
+                        pool.length = 0;
+                        merged.forEach(v => pool.push(v));
+                        totalAdded += pool.length - before;
                     } else if (m.key === 'customReplyGroups') {
                         if (!window.customReplyGroups) window.customReplyGroups = [];
                         data.customReplyGroups.forEach(dg => {
@@ -2183,6 +2301,8 @@ function _showBatchAddDialog() {
                 ? (typeof slackingPlaces !== 'undefined' && slackingPlaces.some(r => normalizeStringStrict(r) === norm))
                 : currentSubTab === 'slkActs'
                 ? (typeof slackingActs !== 'undefined' && slackingActs.some(r => normalizeStringStrict(r) === norm))
+                : currentSubTab === 'kaomoji'
+                ? _kaomojiPool().some(r => normalizeStringStrict(r) === norm)
                 : false;
             if (isDup) { skipped++; return; }
             if (currentSubTab === 'custom') { customReplies.push(val); newItems.push(val); }
@@ -2190,6 +2310,7 @@ function _showBatchAddDialog() {
             else if (currentSubTab === 'statuses') { customStatuses.push(val); newItems.push(val); }
             else if (currentSubTab === 'slkPlaces') { slackingPlaces.push(val); newItems.push(val); }
             else if (currentSubTab === 'slkActs') { slackingActs.push(val); newItems.push(val); }
+            else if (currentSubTab === 'kaomoji') { _kaomojiPool().push(val); newItems.push(val); }
             else if (currentSubTab === 'mottos') customMottos.push(val);
             added++;
         });
@@ -2341,7 +2462,7 @@ function initReplyLibraryListeners() {
                 return;
             }
             if (currentSubTab === 'custom' || currentSubTab === 'pokes' || currentSubTab === 'statuses'
-                || currentSubTab === 'slkPlaces' || currentSubTab === 'slkActs') {
+                || currentSubTab === 'slkPlaces' || currentSubTab === 'slkActs' || currentSubTab === 'kaomoji') {
                 _showBatchAddDialog(); return;
             }
             let input;
@@ -2374,7 +2495,7 @@ function initReplyLibraryListeners() {
 }
 
 function getCategoryName(tabId) {
-    return { custom: '回复', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语', slkPlaces: '摸鱼地点', slkActs: '摸鱼活动' }[tabId] || '内容';
+    return { custom: '回复', kaomoji: '颜文字', pokes: '拍一拍', statuses: '状态', mottos: '格言', intros: '开场语', slkPlaces: '工作地点', slkActs: '摸鱼活动' }[tabId] || '内容';
 }
 
 function updateTabUI() {

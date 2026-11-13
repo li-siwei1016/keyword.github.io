@@ -35,6 +35,14 @@
         let currentSubTab = 'custom';  
         let currentReplyTab = 'custom';
         let customEmojis = [];
+        let customKaomoji = [];
+        /** 颜文字库默认值（首次使用时写入，可自由增删） */
+        const DEFAULT_KAOMOJI = [
+            '(｡･ω･｡)', '(๑•̀ㅂ•́)و✧', '( ˘ω˘ )', 'ヾ(≧▽≦*)o', '(´,,•ω•,,)♡',
+            '(*/ω＼*)', '(￣▽￣)', '(・∀・)', '(๑˃̵ᴗ˂̵)', '_(:з」∠)_',
+            '(灬ºωº灬)', '(*꒦ິ⌓꒦ີ)', '(๑>؂<๑)', '٩(๑•̀ω•́๑)۶', '(´｡• ᵕ •｡`)',
+            'Σ(っ °Д °;)っ', '(ง •_•)ง', '(๑´ㅂ`๑)', '(⌒▽⌒)', '(´▽`ʃ♡ƪ)'
+        ];
         let anniversaries = [];
         let stickerLibrary = []; 
         let myStickerLibrary = []; 
