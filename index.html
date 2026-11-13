@@ -202,6 +202,10 @@
                             <div class="home-sig" id="home-sig-me">…</div>
                         </div>
                     </div>
+                    <div class="link-status-bar home-link-status" id="home-link-status-bar" title="链接状态">
+                        <span class="ls-hearts" data-ls-hearts></span>
+                        <span class="ls-label" data-ls-label></span>
+                    </div>
                 </div>
                 <div class="home-card home-frames-card" id="home-frames-card">
                     <div class="home-frames" id="home-frames">
@@ -2278,6 +2282,11 @@
                     </div>
                     <div id="moments-av-partner" style="display:none;"></div>
                 </div>
+                <div class="mp-bg-actions" id="mp-bg-actions">
+                    <button class="mp-bg-btn" id="mp-bg-view-btn" title="放大查看背景图"><i class="fas fa-expand"></i> 查看</button>
+                    <button class="mp-bg-btn" id="mp-bg-change-btn" title="更换背景图"><i class="fas fa-image"></i> 更换</button>
+                    <input type="file" id="mp-bg-input" accept="image/*" style="display:none;">
+                </div>
                 <div class="mp-sigline" id="mp-sigline" title="点击编辑签名">
                     <i class="fas fa-pen-to-square"></i>
                     <span id="moments-signature-text">点击设置签名</span>
@@ -2299,6 +2308,12 @@
             <div class="moments-feed" id="moments-feed"></div>
             </div>
         </div>
+    </div>
+
+    <!-- 朋友圈背景图全屏查看器 -->
+    <div class="mp-bg-viewer" id="mp-bg-viewer">
+        <img id="mp-bg-viewer-img" alt="背景图">
+        <div class="mp-bgv-tip">点击任意处关闭</div>
     </div>
 
     <div class="modal" id="period-modal">

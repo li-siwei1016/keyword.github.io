@@ -1,6 +1,6 @@
 /**
  * link-status.js - 链接状态
- * 聊天界面顶部栏下方一条「链接状态」明示：
+ * 聊天界面顶部栏下方与主页首行左框各有一条「链接状态」明示：
  * · 5 颗爱心表示链接强度（实心数 0-5，随机）
  * · 0 颗实心 = 链接中断；1 淡若游丝；2 若即若离；3 藕断丝连；4 云水泱泱；5 魂牵梦萦
  * · 每次打开网站随机一次；此后 3 小时内保持不变，3 小时后才切换新状态
@@ -31,9 +31,9 @@
     }
 
     function renderLinkStatus(force) {
-        const heartsEl = document.getElementById('ls-hearts');
-        const labelEl = document.getElementById('ls-label');
-        if (!heartsEl || !labelEl) return;
+        // 同时渲染聊天顶栏下方与主页首行左框中的链接状态条
+        const bars = document.querySelectorAll('.link-status-bar');
+        if (!bars.length) return;
 
         const level = resolveLevel();
 
@@ -41,13 +41,18 @@
         for (let i = 0; i < 5; i++) {
             html += `<i class="${i < level ? 'fas ls-on' : 'far ls-off'} fa-heart"></i>`;
         }
-        heartsEl.innerHTML = html;
-        labelEl.textContent = LEVELS[level];
-        labelEl.classList.toggle('ls-broken', level === 0);
+        bars.forEach(bar => {
+            const heartsEl = bar.querySelector('.ls-hearts');
+            const labelEl = bar.querySelector('.ls-label');
+            if (!heartsEl || !labelEl) return;
+            heartsEl.innerHTML = html;
+            labelEl.textContent = LEVELS[level];
+            labelEl.classList.toggle('ls-broken', level === 0);
+        });
     }
 
     function initLinkStatus() {
-        if (!document.getElementById('link-status-bar')) return;
+        if (!document.querySelector('.link-status-bar')) return;
         renderLinkStatus();
     }
 

@@ -98,6 +98,8 @@
         renderPartnerStatus();
         renderAnniversary();
         applyHomeTheme();
+        // 首行左框：链接状态条（与聊天顶栏下方同款）
+        if (typeof renderLinkStatus === 'function') renderLinkStatus();
     }
 
     /* ---------------- 头像（使用「我的头像 / 对方头像」上传的图片） ---------------- */
@@ -653,6 +655,20 @@
             annivCard.dataset.hb = '1';
             annivCard.addEventListener('click', () => triggerStub('anniversary-function'));
         }
+
+        // 首行左框头像：展示上传的头像，点击可上传 / 更换（复用聊天界面的头像上传弹窗）
+        [['home-av-partner', true], ['home-av-me', false]].forEach(([id, isPartner]) => {
+            const av = document.getElementById(id);
+            if (av && !av.dataset.hb) {
+                av.dataset.hb = '1';
+                av.style.cursor = 'pointer';
+                av.title = '点击' + (isPartner ? '更换对方头像' : '更换我的头像');
+                av.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (typeof window.openAvatarModal === 'function') window.openAvatarModal(isPartner);
+                });
+            }
+        });
 
         initFrames();
         initPhoneModal();

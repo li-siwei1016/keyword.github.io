@@ -468,6 +468,8 @@ fileInput.addEventListener('change', function(e) {
                         hideModal(modal.modal);
                     });
             };
+            // 暴露给主页头像等入口复用（上传/更换头像）
+            window.openAvatarModal = openAvatarModal;
 
             DOMElements.partner.name.addEventListener('click', () => openNameModal(true));
             DOMElements.me.name.addEventListener('click', () => openNameModal(false));

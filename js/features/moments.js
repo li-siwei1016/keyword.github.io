@@ -393,6 +393,112 @@ function maybePartnerPost() {
     return createPartnerMoment();
 }
 
+/* ---------------- 背景图：查看 / 更换 ---------------- */
+let momentsBgImage = null;      // 自定义朋友圈背景（dataURL / URL）
+let momentsBgLoaded = false;
+
+async function loadMomentsBg() {
+    if (momentsBgLoaded) return;
+    if (typeof SESSION_ID === 'undefined' || !SESSION_ID) {
+        if (typeof window.__waitSession === 'function') window.__waitSession(function () { loadMomentsBg(); });
+        return;
+    }
+    try {
+        const saved = await localforage.getItem(getStorageKey('momentsBgImage'));
+        momentsBgImage = (typeof saved === 'string' && saved) ? saved : null;
+    } catch (e) {}
+    momentsBgLoaded = true;
+}
+
+/* 渲染封面背景：优先自定义背景，否则回落到 CSS（主页背景图） */
+function renderMomentsCoverBg() {
+    const bgEl = document.getElementById('mp-cover-bg');
+    if (!bgEl) return;
+    if (momentsBgImage) {
+        bgEl.style.backgroundImage = `url("${mEsc(momentsBgImage)}")`;
+        bgEl.style.backgroundSize = 'cover';
+        bgEl.style.backgroundPosition = 'center top';
+    } else {
+        bgEl.style.backgroundImage = '';
+    }
+}
+
+/* 当前背景图地址（自定义或主页背景图），无图返回 '' */
+function currentMomentsBgSrc() {
+    if (momentsBgImage) return momentsBgImage;
+    const bgEl = document.getElementById('mp-cover-bg');
+    if (!bgEl) return '';
+    try {
+        const bi = getComputedStyle(bgEl).backgroundImage;
+        const m = bi && bi.match(/url\((['"]?)(.*?)\1\)/);
+        if (m && m[2] && m[2] !== 'none') return m[2];
+    } catch (e) {}
+    return '';
+}
+
+function openMomentsBgViewer() {
+    const src = currentMomentsBgSrc();
+    const viewer = document.getElementById('mp-bg-viewer');
+    const img = document.getElementById('mp-bg-viewer-img');
+    if (!viewer || !img || !src) return;
+    img.src = src;
+    viewer.classList.add('open');
+}
+
+function closeMomentsBgViewer() {
+    const viewer = document.getElementById('mp-bg-viewer');
+    if (viewer) viewer.classList.remove('open');
+}
+
+/* 压缩为适合封面的尺寸再保存（最长边 1600，JPEG 0.85） */
+function compressMomentsBg(file) {
+    return new Promise((resolve, reject) => {
+        if (file.size > MAX_IMAGE_SIZE) { reject(new Error('too-large')); return; }
+        if (file.size < 300 * 1024) {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+            return;
+        }
+        const img = new Image();
+        img.onload = () => {
+            try {
+                const MAXW = 1600;
+                let { width, height } = img;
+                if (width > MAXW || height > MAXW) {
+                    if (width >= height) { height = Math.round(height * MAXW / width); width = MAXW; }
+                    else { width = Math.round(width * MAXW / height); height = MAXW; }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = width; canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.85));
+            } catch (e) { reject(e); }
+            URL.revokeObjectURL(img.src);
+        };
+        img.onerror = () => reject(new Error('load-failed'));
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+async function changeMomentsBg(file) {
+    if (!file) return;
+    try {
+        const src = await compressMomentsBg(file);
+        momentsBgImage = src;
+        momentsBgLoaded = true;
+        if (typeof SESSION_ID !== 'undefined' && SESSION_ID) {
+            try { await localforage.setItem(getStorageKey('momentsBgImage'), src); } catch (e) {}
+        }
+        renderMomentsCoverBg();
+        showNotification('朋友圈背景已更换', 'success');
+    } catch (e) {
+        if (e && e.message === 'too-large') showNotification('背景图不能超过 5MB', 'error');
+        else showNotification('背景图处理失败', 'error');
+    }
+}
+
 /* ---------------- 面板 ---------------- */
 /* 封面：双方头像 + 头像框 + 我方自定义签名 */
 function renderMomentsHeader() {
@@ -563,6 +669,8 @@ function toggleMomentComposer(force) {
 
 async function openMomentsPanel() {
     await ensureMomentsLoaded();
+    await loadMomentsBg();
+    renderMomentsCoverBg();
     momentsUnread = 0;
     updateMomentsDot();
     renderMomentsHeader();
@@ -605,6 +713,37 @@ function initMomentsModule() {
     if (closeBtn && !closeBtn.dataset.momentsBound) {
         closeBtn.dataset.momentsBound = '1';
         closeBtn.addEventListener('click', closeMomentsPanel);
+    }
+
+    // 背景图：点击封面放大查看；下方「查看 / 更换」按钮
+    const cover = document.getElementById('mp-cover');
+    if (cover && !cover.dataset.bgBound) {
+        cover.dataset.bgBound = '1';
+        cover.addEventListener('click', (e) => {
+            if (e.target.closest('.mp-cover-me')) return;   // 头像 / 昵称不触发
+            openMomentsBgViewer();
+        });
+    }
+    const bgViewBtn = document.getElementById('mp-bg-view-btn');
+    if (bgViewBtn && !bgViewBtn.dataset.bgBound) {
+        bgViewBtn.dataset.bgBound = '1';
+        bgViewBtn.addEventListener('click', openMomentsBgViewer);
+    }
+    const bgChangeBtn = document.getElementById('mp-bg-change-btn');
+    const bgInput = document.getElementById('mp-bg-input');
+    if (bgChangeBtn && bgInput && !bgChangeBtn.dataset.bgBound) {
+        bgChangeBtn.dataset.bgBound = '1';
+        bgChangeBtn.addEventListener('click', () => bgInput.click());
+        bgInput.addEventListener('change', () => {
+            const file = bgInput.files && bgInput.files[0];
+            bgInput.value = '';
+            if (file) changeMomentsBg(file);
+        });
+    }
+    const bgViewer = document.getElementById('mp-bg-viewer');
+    if (bgViewer && !bgViewer.dataset.bgBound) {
+        bgViewer.dataset.bgBound = '1';
+        bgViewer.addEventListener('click', closeMomentsBgViewer);
     }
 
     const composeToggle = document.getElementById('moments-compose-toggle');
