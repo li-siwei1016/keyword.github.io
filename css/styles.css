@@ -8695,6 +8695,32 @@
     border-bottom: 1px solid var(--border-color);
         }
 
+        /* 从「Ta 的手机」进入心晴手帐时的返回导航键（左上角） */
+        .mood-back-btn {
+    background: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-family);
+    flex: 0 0 auto;
+    margin-right: 8px;
+        }
+        .mood-back-btn:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+        }
+        .mood-back-btn:active { transform: scale(0.94); }
+        @media (max-width: 420px) {
+            .mood-back-btn { padding: 5px 9px 5px 7px; font-size: 11px; margin-right: 6px; }
+        }
+
         .view-switch-btn {
     background: var(--secondary-bg);
     border: 1px solid var(--border-color);
@@ -8707,6 +8733,21 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+        }
+        /* 心晴手帐头部：返回键 + 标题 + 三个视图按钮需在一行内排开，窄屏自动收紧 */
+        .mood-header-actions { flex-wrap: nowrap; gap: 6px; }
+        .mood-header-actions > div:last-child { flex: 0 0 auto; }
+        .mood-header-actions .modal-title { white-space: nowrap; min-width: 0; }
+        @media (max-width: 430px) {
+            .view-switch-btn { padding: 6px 9px; font-size: 11px; gap: 4px; }
+            .mood-header-actions .modal-title { font-size: 13px; gap: 4px; }
+        }
+        @media (max-width: 380px) {
+            .mood-header-actions .view-switch-btn { padding: 5px 7px; font-size: 10.5px; }
+            .mood-header-actions .view-switch-btn i { display: none; }
+            .mood-header-actions .modal-title i { display: none; }
         }
         .view-switch-btn:hover, .view-switch-btn.active {
     background: var(--accent-color);
@@ -12049,6 +12090,72 @@
         }
         .home-frame-menu button:hover { background: #f1f3f9; }
         .home-frame-menu button.danger { color: #e05a5a; }
+
+        /* ---------------- 相框照片裁剪弹窗 ---------------- */
+        .home-crop-content { width: min(92vw, 380px); }
+        .hc-ratio-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .hc-ratio-btn {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: all 0.2s;
+        }
+        .hc-ratio-btn.active {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+            background: rgba(127, 147, 166, 0.10);
+            font-weight: 600;
+        }
+        .hc-stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 5 / 6;
+            overflow: hidden;
+            border-radius: 10px;
+            background:
+                repeating-conic-gradient(#e8ebf2 0% 25%, #f7f8fb 0% 50%) 0 0 / 18px 18px;
+            border: 1px solid var(--border-color);
+            touch-action: none;
+            cursor: grab;
+        }
+        .hc-stage:active { cursor: grabbing; }
+        .hc-stage .hc-img {
+            position: absolute;
+            left: 0;
+            top: 0;
+            max-width: none;
+            max-height: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+            will-change: transform;
+        }
+        .hc-zoom-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .hc-zoom-row input[type="range"] { flex: 1; accent-color: var(--accent-color); }
+        .hc-hint {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            opacity: 0.7;
+            margin-top: 8px;
+        }
 
         /* 第二行 */
         #home-page .home-clock-card { display: flex; flex-direction: column; justify-content: center; gap: 4px; }

@@ -264,6 +264,32 @@
         <input type="file" id="home-photo-input" accept="image/*" style="display:none;">
     </div>
 
+    <!-- 相框照片裁剪弹窗 -->
+    <div class="modal" id="home-crop-modal">
+        <div class="modal-content home-crop-content">
+            <div class="modal-title"><i class="fas fa-crop-simple"></i><span>裁剪照片</span></div>
+            <div class="hc-ratio-row" id="hc-ratio-row">
+                <button class="hc-ratio-btn active" data-rn="5" data-rd="6">拍立得 5:6</button>
+                <button class="hc-ratio-btn" data-rn="1" data-rd="1">方形 1:1</button>
+                <button class="hc-ratio-btn" data-rn="3" data-rd="4">竖图 3:4</button>
+                <button class="hc-ratio-btn" data-rn="4" data-rd="3">横图 4:3</button>
+            </div>
+            <div class="hc-stage" id="hc-stage">
+                <img class="hc-img" id="hc-img" alt="" draggable="false">
+            </div>
+            <div class="hc-zoom-row">
+                <i class="fas fa-magnifying-glass-minus"></i>
+                <input type="range" id="hc-zoom" min="1" max="3" step="0.01" value="1">
+                <i class="fas fa-magnifying-glass-plus"></i>
+            </div>
+            <div class="hc-hint">拖动调整位置 · 双指捏合或滑块缩放</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" id="hc-cancel">取消</button>
+                <button class="modal-btn modal-btn-primary" id="hc-confirm"><i class="fas fa-check"></i> 完成</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 隐藏入口桩：保留既有 JS 绑定，供主页磁贴触发 -->
     <!-- Ta 的手机 -->
     <div class="modal" id="phone-modal">
@@ -1758,6 +1784,9 @@
     <div class="modal" id="mood-modal">
        <div class="modal-content">
         <div class="mood-header-actions">
+            <button class="mood-back-btn" id="mood-back-btn" style="display:none;" title="返回 Ta 的手机">
+                <i class="fas fa-chevron-left"></i><span>返回</span>
+            </button>
             <div class="modal-title" style="margin-bottom:0; border:none; padding:0;">
                 <i class="fas fa-book-open"></i><span>心晴手帐</span>
             </div>

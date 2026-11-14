@@ -1218,7 +1218,29 @@ function initMoodListeners() {
             setTimeout(() => {
                 renderMoodCalendar();
                 showModal(modal);
+                // 从「Ta 的手机」进入时，左上角显示返回导航键（读完即清除标记，避免残留）
+                const moodBackBtn = document.getElementById('mood-back-btn');
+                if (moodBackBtn) {
+                    const fromPhone = !!window._moodOpenedFromPhone;
+                    window._moodOpenedFromPhone = false;
+                    moodBackBtn.dataset.fromPhone = fromPhone ? '1' : '';
+                    moodBackBtn.style.display = fromPhone ? '' : 'none';
+                }
             }, 150); 
+        });
+    }
+
+    const moodBackBtn = document.getElementById('mood-back-btn');
+    if (moodBackBtn && !moodBackBtn.dataset.initialized) {
+        moodBackBtn.dataset.initialized = 'true';
+        moodBackBtn.addEventListener('click', () => {
+            hideModal(modal);
+            if (moodBackBtn.dataset.fromPhone === '1') {
+                moodBackBtn.dataset.fromPhone = '';
+                setTimeout(() => {
+                    if (typeof window.openPhoneModal === 'function') window.openPhoneModal();
+                }, 120);
+            }
         });
     }
 

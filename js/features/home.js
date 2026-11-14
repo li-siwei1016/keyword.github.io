@@ -399,6 +399,7 @@
                 const key = item.dataset.phone;
                 if (key === 'mood') {
                     hideModal(document.getElementById('phone-modal'));
+                    window._moodOpenedFromPhone = true;
                     triggerStub('mood-function');
                     return;
                 }
@@ -525,6 +526,185 @@
         }, 10);
     }
 
+    /* ---------------- 照片裁剪（自定义尺寸，适配相框） ---------------- */
+    const cropState = {
+        img: null, iw: 0, ih: 0,
+        rn: 5, rd: 6,            // 裁剪比例（默认拍立得 5:6，与相框一致）
+        baseScale: 1, zoom: 1, x: 0, y: 0,
+        targetIdx: null, bound: false,
+        pointers: new Map(), pinch0: 0, zoom0: 1
+    };
+
+    function commitCroppedPhoto(dataUrl, idx) {
+        const photos = loadPhotos();
+        const i = (typeof idx === 'number') ? idx : photos.findIndex(p => !p);
+        if (i === -1) { photos.push(dataUrl); photos.shift(); } // 没有空位则轮换到第 0 格
+        else photos[i] = dataUrl;
+        savePhotos(photos);
+        renderFrames();
+        if (typeof showNotification === 'function') showNotification('相框已更新 📷', 'success', 1600);
+    }
+
+    function applyCropTransform() {
+        const imgEl = document.getElementById('hc-img');
+        if (!imgEl || !cropState.img) return;
+        const s = cropState.baseScale * cropState.zoom;
+        imgEl.style.width = (cropState.iw * s) + 'px';
+        imgEl.style.height = (cropState.ih * s) + 'px';
+        imgEl.style.transform = 'translate(' + cropState.x + 'px, ' + cropState.y + 'px)';
+    }
+
+    function clampCropOffset() {
+        const stage = document.getElementById('hc-stage');
+        if (!stage || !cropState.img) return;
+        const s = cropState.baseScale * cropState.zoom;
+        const dw = cropState.iw * s, dh = cropState.ih * s;
+        cropState.x = Math.min(0, Math.max(stage.clientWidth - dw, cropState.x));
+        cropState.y = Math.min(0, Math.max(stage.clientHeight - dh, cropState.y));
+    }
+
+    function fitCropImage() {
+        const stage = document.getElementById('hc-stage');
+        const zoomInput = document.getElementById('hc-zoom');
+        if (!stage || !cropState.img) return;
+        stage.style.aspectRatio = cropState.rn + ' / ' + cropState.rd;
+        void stage.offsetHeight; // 强制 reflow，确保拿到新比例下的尺寸
+        const sw = stage.clientWidth, sh = stage.clientHeight;
+        if (!sw || !sh) return;
+        cropState.baseScale = Math.max(sw / cropState.iw, sh / cropState.ih); // cover
+        cropState.zoom = 1;
+        cropState.x = (sw - cropState.iw * cropState.baseScale) / 2;
+        cropState.y = (sh - cropState.ih * cropState.baseScale) / 2;
+        if (zoomInput) zoomInput.value = 1;
+        applyCropTransform();
+    }
+
+    function setCropZoom(z) {
+        const stage = document.getElementById('hc-stage');
+        const zoomInput = document.getElementById('hc-zoom');
+        if (!stage || !cropState.img) return;
+        const oldS = cropState.baseScale * cropState.zoom;
+        z = Math.max(1, Math.min(3, z));
+        const newS = cropState.baseScale * z;
+        // 以裁剪框中心为焦点缩放
+        const cx = stage.clientWidth / 2, cy = stage.clientHeight / 2;
+        cropState.x = cx - (cx - cropState.x) * (newS / oldS);
+        cropState.y = cy - (cy - cropState.y) * (newS / oldS);
+        cropState.zoom = z;
+        clampCropOffset();
+        applyCropTransform();
+        if (zoomInput && Math.abs(Number(zoomInput.value) - z) > 0.005) zoomInput.value = z;
+    }
+
+    function bindCropperOnce() {
+        if (cropState.bound) return;
+        cropState.bound = true;
+        const stage = document.getElementById('hc-stage');
+        const modal = document.getElementById('home-crop-modal');
+        const zoomInput = document.getElementById('hc-zoom');
+        const ratioRow = document.getElementById('hc-ratio-row');
+        const cancelBtn = document.getElementById('hc-cancel');
+        const confirmBtn = document.getElementById('hc-confirm');
+        if (!stage || !modal) return;
+
+        stage.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+            cropState.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (cropState.pointers.size === 2) {
+                const pts = Array.from(cropState.pointers.values());
+                cropState.pinch0 = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                cropState.zoom0 = cropState.zoom;
+            }
+        });
+        stage.addEventListener('pointermove', (e) => {
+            if (!cropState.pointers.has(e.pointerId)) return;
+            const prev = cropState.pointers.get(e.pointerId);
+            cropState.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (cropState.pointers.size === 1) {
+                cropState.x += e.clientX - prev.x;
+                cropState.y += e.clientY - prev.y;
+                clampCropOffset();
+                applyCropTransform();
+            } else if (cropState.pointers.size === 2) {
+                const pts = Array.from(cropState.pointers.values());
+                const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+                if (cropState.pinch0 > 0 && d > 0) setCropZoom(cropState.zoom0 * d / cropState.pinch0);
+            }
+        });
+        const endPointer = (e) => { cropState.pointers.delete(e.pointerId); };
+        stage.addEventListener('pointerup', endPointer);
+        stage.addEventListener('pointercancel', endPointer);
+        stage.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            setCropZoom(cropState.zoom * (e.deltaY < 0 ? 1.08 : 0.92));
+        }, { passive: false });
+
+        if (zoomInput) zoomInput.addEventListener('input', () => setCropZoom(Number(zoomInput.value)));
+
+        if (ratioRow) ratioRow.addEventListener('click', (e) => {
+            const btn = e.target.closest('.hc-ratio-btn');
+            if (!btn) return;
+            ratioRow.querySelectorAll('.hc-ratio-btn').forEach(b => b.classList.toggle('active', b === btn));
+            cropState.rn = Number(btn.dataset.rn) || 5;
+            cropState.rd = Number(btn.dataset.rd) || 6;
+            fitCropImage();
+        });
+
+        if (cancelBtn) cancelBtn.addEventListener('click', () => hideModal(modal));
+        if (confirmBtn) confirmBtn.addEventListener('click', () => {
+            const st = document.getElementById('hc-stage');
+            if (!cropState.img || !st) { hideModal(modal); return; }
+            try {
+                const s = cropState.baseScale * cropState.zoom;
+                const sx = -cropState.x / s, sy = -cropState.y / s;
+                const sw = st.clientWidth / s, sh = st.clientHeight / s;
+                const outW = 720;
+                const outH = Math.round(outW * cropState.rd / cropState.rn);
+                const canvas = document.createElement('canvas');
+                canvas.width = outW; canvas.height = outH;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, outW, outH);
+                ctx.drawImage(cropState.img, sx, sy, sw, sh, 0, 0, outW, outH);
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                hideModal(modal);
+                commitCroppedPhoto(dataUrl, cropState.targetIdx);
+            } catch (err) {
+                hideModal(modal);
+                if (typeof showNotification === 'function') showNotification('裁剪失败，请重试', 'error');
+            }
+        });
+    }
+
+    function openHomeCropper(dataUrl, targetIdx) {
+        const modal = document.getElementById('home-crop-modal');
+        const imgEl = document.getElementById('hc-img');
+        if (!modal || !imgEl) { commitCroppedPhoto(dataUrl, targetIdx); return; } // 兜底：不裁剪直接保存
+        const img = new Image();
+        img.onload = () => {
+            cropState.img = img;
+            cropState.iw = img.naturalWidth;
+            cropState.ih = img.naturalHeight;
+            cropState.targetIdx = targetIdx;
+            cropState.pointers.clear();
+            bindCropperOnce();
+            // 恢复默认比例按钮（拍立得 5:6）
+            cropState.rn = 5; cropState.rd = 6;
+            const ratioRow = document.getElementById('hc-ratio-row');
+            if (ratioRow) ratioRow.querySelectorAll('.hc-ratio-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.rn === '5' && b.dataset.rd === '6'));
+            imgEl.src = dataUrl;
+            showModal(modal);
+            requestAnimationFrame(() => requestAnimationFrame(fitCropImage));
+        };
+        img.onerror = () => {
+            if (typeof showNotification === 'function') showNotification('图片加载失败', 'error');
+        };
+        img.src = dataUrl;
+    }
+    window.openHomeCropper = openHomeCropper;
+
     function initFrames() {
         const card = document.getElementById('home-frames-card');
         if (!card || card.dataset.framesBound) return;
@@ -535,21 +715,16 @@
             input.addEventListener('change', (e) => {
                 const file = e.target.files && e.target.files[0];
                 if (!file) return;
+                const targetIdx = input._targetIdx;
                 const doAdd = async () => {
                     try {
                         let base64;
-                        if (typeof optimizeImage === 'function') base64 = await optimizeImage(file, 720, 0.82);
+                        // 先归一化到 1600px 以内，再进入裁剪（手机原图往往很大）
+                        if (typeof optimizeImage === 'function') base64 = await optimizeImage(file, 1600, 0.9);
                         else {
                             base64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
                         }
-                        const photos = loadPhotos();
-                        const idx = (typeof input._targetIdx === 'number') ? input._targetIdx : photos.findIndex(p => !p);
-                        if (idx === -1) { // 没有空位则轮换到第 0 格
-                            photos.push(base64); photos.shift();
-                        } else photos[idx] = base64;
-                        savePhotos(photos);
-                        renderFrames();
-                        if (typeof showNotification === 'function') showNotification('相框已更新 📷', 'success', 1600);
+                        openHomeCropper(base64, targetIdx);
                     } catch (err) {
                         if (typeof showNotification === 'function') showNotification('图片处理失败', 'error');
                     }

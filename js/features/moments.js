@@ -537,38 +537,6 @@ function renderMomentsHeader() {
     }
 }
 
-/* 封面下拉：参照微信朋友圈，下拉时封面随手指拉伸，松手回弹 */
-function initCoverPull() {
-    const scroll = document.querySelector('#moments-modal .mp-scroll');
-    const cover = document.getElementById('mp-cover');
-    if (!scroll || !cover || cover.dataset.pullBound) return;
-    cover.dataset.pullBound = '1';
-    const BASE_H = 190;
-    let startY = 0, pulling = false;
-    scroll.addEventListener('touchstart', (e) => {
-        if (scroll.scrollTop <= 0) { startY = e.touches[0].clientY; pulling = true; }
-        else pulling = false;
-    }, { passive: true });
-    scroll.addEventListener('touchmove', (e) => {
-        if (!pulling) return;
-        const dy = e.touches[0].clientY - startY;
-        if (dy > 0 && scroll.scrollTop <= 0) {
-            const grow = Math.min(dy * 0.55, 170);
-            cover.style.transition = 'none';
-            cover.style.height = (BASE_H + grow) + 'px';
-        }
-    }, { passive: true });
-    const release = () => {
-        if (!pulling) return;
-        pulling = false;
-        cover.style.transition = 'height 0.38s cubic-bezier(0.25,0.8,0.35,1.1)';
-        cover.style.height = '';
-        setTimeout(() => { cover.style.transition = ''; }, 420);
-    };
-    scroll.addEventListener('touchend', release);
-    scroll.addEventListener('touchcancel', release);
-}
-
 function updateMeetDaysText() {
     const el = document.getElementById('moments-anniv-text');
     const dateInput = document.getElementById('moments-meet-date');
@@ -841,7 +809,6 @@ function initMomentsModule() {
     }
 
     initMomentsLongPress();
-    initCoverPull();
 
     // 定时按概率判定对方是否发布动态
     if (!momentsTicker) {
